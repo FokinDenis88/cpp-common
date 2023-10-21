@@ -1,0 +1,18 @@
+# The Docker image that will be used to build your app
+image: alpine
+
+pages:
+  script:
+      - apk update && apk add doxygen #graphviz ttf-freefont
+      #- ls
+      - doxygen doc/Doxyfile
+      #- ls
+      - mv doxygen/html/ public/
+
+  environment: production
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
