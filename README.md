@@ -1,8 +1,13 @@
 # Cpp General Support Library
 Useful common snippets
 
+## Repositories Web Pages
+[github](https://github.com/FokinDenis88/cpp-general)
+[gitlab](https://gitlab.com/FokinDenis88/cpp-general)
+
 ## Installation
 1) git clone https://gitlab.com/FokinDenis88/cpp-general.git
+2) (From the working dir = design-patterns)  cmake -B build/visual-studio
 
 ## Functions of Project
 **tuple:**
