@@ -1,5 +1,5 @@
-#ifndef TUPLE_
-#define TUPLE_
+#ifndef TUPLE_HPP
+#define TUPLE_HPP
 
 #include <tuple>
 #include <concepts>
@@ -10,21 +10,21 @@ namespace cpp {
 	/** Implementation of ApplyTuple. */
 	template<typename FuncType, typename... TupleArgsTypes, size_t... index>
 	//template<typename FuncType, size_t... index, typename... TupleElemTypes>
-		requires std::is_invocable_v<FuncType, TupleArgsTypes...>
+	requires std::is_invocable_v<FuncType, TupleArgsTypes...>
 	inline void ApplyTupleElement(FuncType&& func_obj,
-								  std::tuple<TupleArgsTypes...>& tuple_p,
+								  std::tuple<TupleArgsTypes&&...>& tuple_p,
 								  std::index_sequence<index...>) {
-								  func_obj(std::get<index>(tuple_p)...);
+		func_obj(std::get<index>(tuple_p)...);
 	}
 
 	/** Invoke callable object with tuple args. Needs C++ 11. */
 	template<typename FuncType, typename... TupleArgsTypes>
-	//requires std::is_invocable_v<FuncType, >
-	inline void ApplyTuple(FuncType&& func_obj, std::tuple<TupleArgsTypes...>& tuple_p) {
+	requires std::is_invocable_v<FuncType, TupleArgsTypes...>
+	inline void ApplyTuple(FuncType&& func_obj, std::tuple<TupleArgsTypes&&...>& tuple_p) {
+		// Can't make const args tuple
 		ApplyTupleElement(std::forward<FuncType>(func_obj),
-			tuple_p,
-			//std::forward<TupleType>(tuple_p),
-			std::make_index_sequence<std::tuple_size_v<std::tuple<TupleArgsTypes...>>>{});
+					tuple_p,
+					std::make_index_sequence<std::tuple_size_v<std::tuple<TupleArgsTypes&&...>>>{});
 	}
 
 
@@ -56,4 +56,4 @@ namespace cpp {
 
 } // !namespace cpp
 
-#endif // !TUPLE_
+#endif // !TUPLE_HPP
