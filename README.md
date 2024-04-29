@@ -2,7 +2,7 @@
 Useful common snippets
 
 ## Repositories Web Pages
-[github](https://github.com/FokinDenis88/cpp-general)
+[github](https://github.com/FokinDenis88/cpp-general)  
 [gitlab](https://gitlab.com/FokinDenis88/cpp-general)
 
 ## Installation
@@ -15,8 +15,13 @@ Useful common snippets
 * **for_parallel** - Multithreading for loop
 * **date_time** - date and time using C functions
 
-
-
+## Contact
+**Skype:** live:dragon8806
+**Telegram:** https://t.me/Furious_Dragon_88
+**Discord:** ID: fokin_denis_yurievich_  User Name: fokin_denis_yurievich_
+**Gitter:** @fokindenis88_gitlab:gitter.im
+**VK (Russia):** https://vk.com/furious__dragon
+**Email:** fokin-denis-88-code@ya.ru
 
 ## Support
 Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
