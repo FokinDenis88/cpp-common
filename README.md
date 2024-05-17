@@ -4,7 +4,6 @@ Useful common snippets
 ## Repository Web Pages
 [github](https://github.com/FokinDenis88/cpp-general)  
 [gitlab (main)](https://gitlab.com/FokinDenis88/cpp-general)
-[gitverse (Russia)](https://gitverse.ru/FokinDenis88/cpp-general)
 
 ## Installation
 1) git clone https://gitlab.com/FokinDenis88/cpp-general.git
