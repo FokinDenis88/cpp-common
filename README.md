@@ -3,7 +3,8 @@ Useful common snippets
 
 ## Repository Web Pages
 [github](https://github.com/FokinDenis88/cpp-general)  
-[gitlab](https://gitlab.com/FokinDenis88/cpp-general)
+[gitlab (main)](https://gitlab.com/FokinDenis88/cpp-general)
+[gitverse (Russia)](https://gitverse.ru/FokinDenis88/cpp-general)
 
 ## Installation
 1) git clone https://gitlab.com/FokinDenis88/cpp-general.git
@@ -18,10 +19,11 @@ Useful common snippets
 ## Contact
 **Skype:** live:dragon8806  
 **Telegram:** https://t.me/Furious_Dragon_88  
-**Discord:** ID: fokin_denis_yurievich_  User Name: fokin_denis_yurievich_  
-**Gitter:** @fokindenis88_gitlab:gitter.im  
 **VK (Russia):** https://vk.com/furious__dragon  
-**Email:** fokin-denis-88-code@ya.ru
+**Discord:** ***ID:*** fokin_denis_yurievich_  ***User Name:*** fokin_denis_yurievich_  
+**Email:** fokin-denis-88-code@ya.ru  
+**Gitter:** @fokindenis88_gitlab:gitter.im
+
 
 ## Support
 Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
