@@ -1,4 +1,4 @@
-# CMakeList.txt : CMake project for artificial-neural-networks, include source and define
+﻿# CMakeList.txt : CMake project for artificial-neural-networks, include source and define
 # project specific logic here.
 #
 cmake_minimum_required(VERSION 3.8)
@@ -29,15 +29,21 @@ set(TARGET_NAME ${PROJECT_NAME})
 set(INCLUDES include)
 
 set(SOURCES
-	cpp-general.cpp
-    src/multithread-for-loop.cpp
+	src/cpp-general.cpp
+    src/concurrency/multithread-for-loop.cpp
 	)
 
 set(ALL_HEADERS_FILTER
+    include/general.hpp
+    include/ieditor.hpp
+    include/interface-macros.hpp
     include/tuple.hpp
-    include/current-date.hpp
-    include/date-time.hpp
-    include/multithreading.hpp
+    include/chrono/current-date.hpp
+    include/chrono/date-time.hpp
+    include/concurrency/multithreading.hpp
+    include/concurrency/thread.hpp
+    include/error/custom-exception.hpp
+    include/error/error.hpp
 	)
 set(DOC_FILTER
     #doc/to-do.txt
