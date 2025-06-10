@@ -27,7 +27,10 @@ namespace general {
 			return {};
 		};
 
-		/** Generate Error message for CustomException. */
+		/**
+		 * Generate Error message for CustomException.
+		 * To ErrorType message add base_what message.
+		 */
 		template<typename ErrorType>
 		inline std::string GenerateExceptionMessage(const ErrorType& error,
 													const char* base_what = '\0') {
@@ -49,12 +52,17 @@ namespace general {
 		 *
 		 * @tparam ErrorType The specific error type holding extra details about the failure.
 		 */
-		template<typename ErrorType>
-		// requires std::is_base_of_v<> derived from Error
-		class CustomException : public std::exception {
+		template<typename ExceptionType = std::exception, typename ErrorInfoType = ErrorInfoGeneral>
+		// requires std::is_base_of_v<> derived from Error | requires std::is_base_of_v<exception>
+		class CustomException : public ExceptionType {
 		public:
+			using ErrorType = Error<ErrorInfoType>;
+
+			/** Function object, that used to generate & format final error message. */
             using FormatterType = typename ErrorType::FormatterType;
-			using DefaultFormatterType = typename ErrorType::DefaultFormatterType;
+
+			/** Default generator & formatter of final error message. */
+			static inline const FormatterType DefaultFormatter{ ErrorType::DefaultFormatter };
 
 		protected:
 			CustomException(const CustomException&) = delete; // polymorphic class suppress copy/move C.67
@@ -65,23 +73,22 @@ namespace general {
 			~CustomException() override = default;
 
 
-			CustomException(const std::exception& exception, const ErrorType& error)
-					:	std::exception		{ exception }, // Base class initialization
+			CustomException(const ExceptionType& exception, const ErrorType& error)
+					:	ExceptionType		{ exception }, // Base class initialization
 						error_				{ error } {
 			};
-			template<typename ErrorInfoType>
-			CustomException(const std::exception& exception,
+			CustomException(const ExceptionType& exception,
 							const ErrorInfoType& info,
-							FormatterType formatter = DefaultFormatterType{})
-					:	std::exception{ exception }, // Base class initialization
-						error_{ info, formatter } {
+							FormatterType formatter = DefaultFormatter)
+					:	ExceptionType{ exception }, // Base class initialization
+						error_{ info, std::move(formatter) } {
 			};
 			template<typename ErrorInfoType>
-			CustomException(const std::exception& exception,
+			CustomException(const ExceptionType& exception,
 							ErrorInfoType&& info,
-							FormatterType formatter = DefaultFormatterType{})
-					:	std::exception{ exception }, // Base class initialization
-						error_{ std::forward<ErrorInfoType>(info), formatter } {
+							FormatterType formatter = DefaultFormatter)
+					:	ExceptionType{ exception }, // Base class initialization
+						error_{ std::forward<ErrorInfoType>(info), std::move(formatter) } {
 			};
 
 
@@ -98,11 +105,16 @@ namespace general {
 				return os;
 			}*/
 
+
+			/** Get base exception's what message. */
+			inline const char* base_what() const noexcept {
+				return this->ExceptionType::what();
+			};
 			/** Getter for error object stored in exception. */
 			inline const ErrorType& get_error() const noexcept { return error_; }
 
 		private:
-			// Basic exception message is inside std::exception
+			// Basic exception message is inside ExceptionType
 
 			inline void LazyWhatFormatting() const noexcept {
 				if (what_.empty()) {
@@ -121,8 +133,14 @@ namespace general {
 
 		}; // !class CustomException
 
-		using GeneralException	= CustomException<ErrorGeneral>;
-		using DetailedException = CustomException<ErrorDetailed>;
+		template<typename ExceptionType = std::exception>
+		using GeneralException = CustomException<ExceptionType, ErrorInfoGeneral>;
+
+		template<typename ExceptionType = std::exception>
+		using CodeException = CustomException<ExceptionType, ErrorInfoCode>;
+
+		template<typename ExceptionType = std::exception>
+		using DetailedException = CustomException<ExceptionType, ErrorInfoDetailed>;
 
 
 #define FILE_N_LINE __FILE__, __LINE__
@@ -136,6 +154,37 @@ namespace general {
 //        std::cerr << "Error occurred: " << msg << std::endl; \
 //        THROW_CUSTOM_EXCEPTION(msg, reason);       \
 //    } while(false)
+
+
+		/** Just snippet for copy past. */
+		class ConcreteException : public CodeException<std::system_error> {
+		public:
+			using ConcreteExceptionErrorType = CodeException<std::system_error>;
+			using FormatterType = ConcreteExceptionErrorType::FormatterType;
+			using ConcreteExceptionErrorType::DefaultFormatter;
+
+		protected:
+			ConcreteException(const ConcreteException&) = delete; // polymorphic class suppress copy/move C.67
+			ConcreteException& operator=(const ConcreteException&) = delete;
+			ConcreteException(ConcreteException&&) noexcept = delete;
+			ConcreteException& operator=(ConcreteException&&) noexcept = delete;
+		public:
+			~ConcreteException() override = default;
+
+
+			ConcreteException(const std::system_error& exception,
+							const ErrorInfoCode& info,
+							FormatterType formatter = DefaultFormatter)
+					: ConcreteExceptionErrorType{ exception, info, std::move(formatter) } { // move formatter, cause resources maybe in fn
+			};
+			ConcreteException(const std::system_error& exception,
+								ErrorInfoCode&& info,
+								FormatterType formatter = DefaultFormatter)
+					: ConcreteExceptionErrorType{ exception, std::forward<ErrorInfoCode>(info), std::move(formatter) } {
+			};
+
+		}; // !class ConcreteException
+
 
 	} // !namespace error
 
