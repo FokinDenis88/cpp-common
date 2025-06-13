@@ -1,0 +1,2 @@
+issues, ideas, plan work, todos, bugs reports, feature requests (proposals), 
+questions, support requests, documentation

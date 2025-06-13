@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Can be different with target
-set(PROJECT_NAME cpp-com)
+set(PROJECT_NAME cpp-common)
 project(${PROJECT_NAME} VERSION 1.0.0)
 set(TARGET_NAME ${PROJECT_NAME})
 
@@ -30,7 +30,7 @@ set(GTEST_INCLUDE_DIR ${gtest_SOURCE_DIR}/include)
 
 
 set(SOURCES
-	src/cpp-com.cpp
+	src/cpp-common.cpp
     src/concurrency/multithread-for-loop.cpp
 	)
 
@@ -69,7 +69,8 @@ set(INCLUDES
 )
 
 # Include Directories
-target_include_directories(${TARGET_NAME} PUBLIC ${INCLUDES})
+#target_include_directories(${TARGET_NAME} PUBLIC ${INCLUDES})
+include_directories(PUBLIC ${INCLUDES})
 #target_link_libraries(${TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
 
@@ -110,6 +111,7 @@ set_property(TARGET ${TARGET_NAME} PROPERTY SUBSYSTEM CONSOLE)
 #============================Google Test========================================
 # Source code, that will be tested
 set(TARGET_TESTABLE_CODE
+    src/cpp-common.cpp
 	#src/cpp-idiom/pimpl.cpp
 )
 # Source code of tests
