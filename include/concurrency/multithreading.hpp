@@ -1,11 +1,11 @@
-#ifndef MULTITHREADING_HPP
+﻿#ifndef MULTITHREADING_HPP
 #define MULTITHREADING_HPP
 
 #include <vector>
 #include <thread>
 #include <functional>
 
-namespace cpp {
+namespace common {
 //namespace multithreading {
 
     /**
@@ -61,6 +61,6 @@ namespace cpp {
             running_threads[i].join();
         }
     }
-} // !namespace cpp
+} // !namespace common
 
 #endif // !MULTITHREADING_HPP

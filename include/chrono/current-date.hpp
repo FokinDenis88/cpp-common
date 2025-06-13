@@ -1,11 +1,11 @@
-#ifndef DATETIME_HPP_
+﻿#ifndef DATETIME_HPP_
 #define DATETIME_HPP_
 
 #include <string>
 #include <chrono>
 #include <ctime>
 
-namespace cpp {
+namespace common {
     //namespace date_time {
 
     std::string CurrentDate() {
@@ -18,6 +18,6 @@ namespace cpp {
         return text;
     }
 
-} // !namespace cpp
+} // !namespace common
 
 #endif // !DATETIME_HPP_

@@ -4,47 +4,54 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Can be different with target
-set(PROJECT_NAME cpp-general)
-project(${PROJECT_NAME} VERSION 1.0)
+set(PROJECT_NAME cpp-com)
+project(${PROJECT_NAME} VERSION 1.0.0)
 set(TARGET_NAME ${PROJECT_NAME})
 
 
 #============================Google Test========================================
 # http://google.github.io/googletest/quickstart-cmake.html
 # GoogleTest requires at least C++14
-#set(CMAKE_CXX_STANDARD 14)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#include(FetchContent)
-#FetchContent_Declare(
-  #googletest
-  #URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-#)
+include(FetchContent)
+FetchContent_Declare(
+	googletest
+	GIT_REPOSITORY https://github.com/google/googletest.git
+	GIT_TAG        origin/main		# Branch name, tag name or tag hash
+)
+
 # For Windows: Prevent overriding the parent project's compiler/linker settings
-#set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-#FetchContent_MakeAvailable(googletest)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+set(GTEST_INCLUDE_DIR ${gtest_SOURCE_DIR}/include)
 #=================================================================================
 
 
-set(INCLUDES include)
-
 set(SOURCES
-	src/cpp-general.cpp
+	src/cpp-com.cpp
     src/concurrency/multithread-for-loop.cpp
 	)
 
 set(ALL_HEADERS_FILTER
-    include/general.hpp
-    include/ieditor.hpp
-    include/interface-macros.hpp
-    include/tuple.hpp
     include/chrono/current-date.hpp
     include/chrono/date-time.hpp
     include/concurrency/multithreading.hpp
     include/concurrency/thread.hpp
     include/error/custom-exception.hpp
     include/error/error.hpp
+    include/weak-ptr/weak-member-fn.hpp
+    include/weak-ptr/weak-ptr.hpp
+
+    include/common.hpp
+    include/generic.hpp
+    include/ieditor.hpp
+    include/interface-macros.hpp
+    include/tuple.hpp
 	)
+
+
 set(DOC_FILTER
     #doc/to-do.txt
 	)
@@ -55,23 +62,30 @@ set(DOC_FILTER
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # RUNTIME_OUTPUT_DIRECTORY and RUNTIME_OUTPUT_NAME
 
-
-# Add source to this project's executable.
-add_executable(${TARGET_NAME} ${SOURCES} ${ALL_HEADERS_FILTER} ${DOC_FILTER})
+# Include Directories
+set(INCLUDES
+	include
+	${GTEST_INCLUDE_DIR}	# for "gtest/gtest.h"
+)
 
 # Include Directories
 target_include_directories(${TARGET_NAME} PUBLIC ${INCLUDES})
 #target_link_libraries(${TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
+
+# Add source to this project's executable.
+add_executable(${TARGET_NAME} ${SOURCES} ${ALL_HEADERS_FILTER} ${DOC_FILTER})
+
+#target_link_libraries(${TARGET_NAME} PRIVATE OpenMP::OpenMP_CXX)
 #add_custom_command()
 
 
 # Filters for Grouping files in project
 # Headers
-#source_group("Architectural/Headers" FILES ${HEADERS_FILTER_ARCHITECTURAL})
+source_group("Headers" FILES ${ALL_HEADERS_FILTER})
 
 # Sources
-#source_group("Architectural/Source" FILES ${SOURCES_FILTER_ARCHITECTURAL})
+source_group("Source" FILES ${SOURCES})
 
 
 
@@ -86,11 +100,43 @@ endif()
 
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 20)
+  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 23)
   set_property(TARGET ${TARGET_NAME} PROPERTY C_STANDARD 17)
 endif()
 set_property(TARGET ${TARGET_NAME} PROPERTY SUBSYSTEM CONSOLE)
 
+
+
+#============================Google Test========================================
+# Source code, that will be tested
+set(TARGET_TESTABLE_CODE
+	#src/cpp-idiom/pimpl.cpp
+)
+# Source code of tests
+set(SOURCES_FILTER_TESTS
+	test/common/common-test.cpp
+)
+
+# Library with code of work project for linking to test project
+add_library(testable_code_library OBJECT ${TARGET_TESTABLE_CODE})
+source_group("Tests" FILES ${SOURCES_FILTER_TESTS})
+
+# Enable Google Tests
+set(TEST_TARGET_NAME ${TARGET_NAME}-test)
+enable_testing()
+
+add_executable(
+  ${TEST_TARGET_NAME}
+  ${SOURCES_FILTER_TESTS})
+
+target_link_libraries(
+  ${TEST_TARGET_NAME}
+  PUBLIC testable_code_library
+  GTest::gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(${TEST_TARGET_NAME})
+#================================================================================
 
 
 

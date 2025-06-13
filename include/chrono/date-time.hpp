@@ -1,11 +1,11 @@
-#ifndef DATETIME_HPP
+﻿#ifndef DATETIME_HPP
 #define DATETIME_HPP
 
 #include <string>
 #include <chrono>
 #include <ctime>
 
-namespace cpp {
+namespace common {
 //namespace date_time {
 
     /**  predefined char count for ctime() */
@@ -65,7 +65,7 @@ namespace cpp {
     //    }
     //}
 
-} // !namespace cpp
+} // !namespace common
 
 #endif // !DATETIME_HPP
 

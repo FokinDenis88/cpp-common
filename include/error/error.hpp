@@ -8,7 +8,7 @@
 #include <utility> // for move in Error class in set_info()
 
 
-namespace general {
+namespace common {
 
 	namespace error {
 //===========================Message Info Structures===============================
@@ -261,7 +261,7 @@ namespace general {
 
 	} // !namespace error
 
-} // !namespace general
+} // !namespace common
 
 
 #endif // !ERROR_HPP

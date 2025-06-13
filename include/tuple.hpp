@@ -1,11 +1,11 @@
-#ifndef TUPLE_HPP
+﻿#ifndef TUPLE_HPP
 #define TUPLE_HPP
 
 #include <tuple>
 #include <concepts>
 
 /** C++ General Support Library */
-namespace cpp {
+namespace common {
 
 	/** Implementation of ApplyTuple. */
 	template<typename FuncType, typename... TupleArgsTypes, size_t... index>
@@ -54,6 +54,6 @@ namespace cpp {
 		(ConvertDataOnIndexTuple<Indexes>(buffer_tuple, buffer_str), ...);
 	}*/
 
-} // !namespace cpp
+} // !namespace common
 
 #endif // !TUPLE_HPP

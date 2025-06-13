@@ -8,7 +8,7 @@
 #include "error.hpp"
 
 
-namespace general {
+namespace common {
 	namespace error {
 
 //=====================Exception Message Generator===============================
@@ -185,11 +185,9 @@ namespace general {
 
 		}; // !class ConcreteException
 
-
 	} // !namespace error
 
-
-} // !namespace general
+} // !namespace common
 
 
 #endif // !CUSTOM_EXCEPTION_HPP

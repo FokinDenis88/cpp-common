@@ -5,7 +5,7 @@
 //#include <exception> // CustomException
 //#include <stdexcept> // different exception types
 
-namespace general {
+namespace common {
 
 	namespace thread {
 		/*
@@ -135,7 +135,7 @@ namespace general {
 
 	} // !namespace thread
 
-} // !namespace general
+} // !namespace common
 
 
 #endif // !THREAD_HPP
