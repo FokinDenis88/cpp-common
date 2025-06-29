@@ -16,24 +16,24 @@ Useful common snippets. Source code, that can be used in any project.
 ### concepts-library
 
 ### concurrency-support-library
-[multithreading](/include/concurrency-support-library/multithreading.hpp) - concurrent for ().
+[multithreading](/include/concurrency-support-library/multithreading.hpp) - concurrent for (). <br>
 [thread](/include/concurrency-support-library/thread.hpp) - (undone) work with threads and thread pool.
 
 ### containers-library
 [generic-container](/include/containers-library/generic-container.hpp) - work with any container.
 
 ### diagnostics-library
-[custom-exception](/include/diagnostics-library/custom-exception.hpp) - class for creating custom exceptions.
+[custom-exception](/include/diagnostics-library/custom-exception.hpp) - class for creating custom exceptions. <br>
 [error](/include/diagnostics-library/error.hpp) - error class for projects without exceptions.
 
 ### general-utilities-library
-[common](/include/general-utilities-library/common.hpp)
-[iaction](/include/general-utilities-library/iaction.hpp)
-[ieditor](/include/general-utilities-library/ieditor.hpp)
-[interface-macros](/include/general-utilities-library/interface-macros.hpp) - macros for quick defining abstract interface.
+[common](/include/general-utilities-library/common.hpp) <br>
+[iaction](/include/general-utilities-library/iaction.hpp) <br>
+[ieditor](/include/general-utilities-library/ieditor.hpp) <br>
+[interface-macros](/include/general-utilities-library/interface-macros.hpp) - macros for quick defining abstract interface. <br>
 [tuple](/include/general-utilities-library/tuple.hpp)
 #### functional
-[functional](/include/general-utilities-library/functional/functional.hpp) - invoke, apply member function.
+[functional](/include/general-utilities-library/functional/functional.hpp) - invoke, apply member function. <br>
 [weak-method-invoker](/include/general-utilities-library/functional/weak-method-invoker.hpp) - class for invoking member functions on expired objects
 
 ### input-output-library
@@ -62,7 +62,7 @@ Useful common snippets. Source code, that can be used in any project.
 ### text-processing-library
 
 ### time-library
-[current-date](/include/time-library/current-date.hpp) - c style time
+[current-date](/include/time-library/current-date.hpp) - c style time <br>
 [date-time](/include/time-library/date-time.hpp) - c style date
 
 
