@@ -5,8 +5,9 @@
 #include <thread>
 #include <functional>
 
-namespace common {
-//namespace multithreading {
+
+/** Namespace for parallel, async operations */
+namespace conc {
 
     /**
     * Parallel multithread realisation of for loop.No Concurrency.No Common resources.
@@ -61,6 +62,7 @@ namespace common {
             running_threads[i].join();
         }
     }
-} // !namespace common
+
+} // !namespace conc
 
 #endif // !MULTITHREADING_HPP

@@ -1,0 +1,14 @@
+﻿functional, tuple: replace return type of ApplyMethod, InvokeMethod to pair<bool, optional>
+
+Generic-container: generic work with any container
+
+WeakMethodInvoker: refactor + big attention to Wrappers for storing in container. They need to be refactored.
+
+
+
+
+
+Upgrade (not critical improvements):
+
+Weak-method-invoker  ->  method-invoker. Working with object and any type of smart pointers in object_ptr member data.
+    Maybe work with generic smart pointer.

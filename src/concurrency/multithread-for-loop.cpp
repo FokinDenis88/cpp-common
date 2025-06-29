@@ -1,10 +1,10 @@
-#include <iostream>
+﻿#include <iostream>
 #include <chrono>
 //#include <mutex>
 //#include <exception>
 //#include <stdexcept>
 
-#include "Multithreading.hpp"
+#include "concurrency-support-library/multithreading.hpp"
 
 
 // Parralel For Loop Evaluation. There is no common resource. No Concurrency.
@@ -97,7 +97,7 @@ int Run() {
     start = std::chrono::steady_clock::now();
     A obj{};
     std::function<void(int, int)> func{ std::bind(&A::ForLoop, &obj, std::placeholders::_1, std::placeholders::_2) };
-    cpp::for_parallel(func, 0, max_iteration);
+    conc::for_parallel(func, 0, max_iteration);
     //std::function<void(A::*)(int, int)> func = A::ForLoop;
     /*std::function<void(const A&, int, int)> func{ &A::ForLoop };
     multithreading::for_parallel(func, 0, max_iteration);*/

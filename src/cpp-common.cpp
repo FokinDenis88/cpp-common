@@ -1,10 +1,8 @@
-// Project TODO section
-// TODO: make google tests
+﻿// Project TODO section
 
+#include "all-headers.hpp"
 
 #include <iostream>
-
-#include "tuple.hpp"
 
 
 int main() {

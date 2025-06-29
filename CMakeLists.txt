@@ -29,31 +29,81 @@ set(GTEST_INCLUDE_DIR ${gtest_SOURCE_DIR}/include)
 #=================================================================================
 
 
+set(ALL_HEADERS_FILTER
+    include/all-headers.hpp
+
+    # algorithms-library
+
+    # concepts-library
+
+    # concurrency-support-library
+    include/concurrency-support-library/multithreading.hpp
+    include/concurrency-support-library/thread.hpp
+
+    # containers-library
+    include/containers-library/generic-container.hpp
+
+    # diagnostics-library
+    include/diagnostics-library/custom-exception.hpp
+    include/diagnostics-library/error.hpp
+
+    # general-utilities-library
+        # functional
+        include/general-utilities-library/functional/functional.hpp
+        include/general-utilities-library/functional/weak-method-invoker.hpp
+
+    include/general-utilities-library/common.hpp
+    include/general-utilities-library/iaction.hpp
+    include/general-utilities-library/ieditor.hpp
+    include/general-utilities-library/interface-macros.hpp
+    include/general-utilities-library/tuple.hpp
+
+
+    # input-output-library
+
+    # iterators-library
+
+    # language-support-library
+
+    # memory-management-library
+        # weak-ptr
+        include/memory-management-library/weak-ptr/weak-ptr.hpp
+
+    include/memory-management-library/generic-smart-ptr.hpp
+
+
+    # metaprogramming-library
+        # type-traits
+        include/metaprogramming-library/type-traits/type-traits.hpp
+
+
+    # multi-purpose-headers
+
+    # numerics-library
+
+    # ranges-library
+
+    # strings-library
+
+    # text-processing-library
+
+    # time-library
+    include/time-library/current-date.hpp
+    include/time-library/date-time.hpp
+	)
+
+
 set(SOURCES
 	src/cpp-common.cpp
     src/concurrency/multithread-for-loop.cpp
 	)
 
-set(ALL_HEADERS_FILTER
-    include/chrono/current-date.hpp
-    include/chrono/date-time.hpp
-    include/concurrency/multithreading.hpp
-    include/concurrency/thread.hpp
-    include/error/custom-exception.hpp
-    include/error/error.hpp
-    include/weak-ptr/weak-member-fn.hpp
-    include/weak-ptr/weak-ptr.hpp
-
-    include/common.hpp
-    include/generic.hpp
-    include/ieditor.hpp
-    include/interface-macros.hpp
-    include/tuple.hpp
-	)
-
 
 set(DOC_FILTER
-    #doc/to-do.txt
+    README.md
+    CHANGELOG.md
+    .gitlab-ci.yml
+    doc/issues/to-do.txt
 	)
 
 
@@ -88,6 +138,8 @@ source_group("Headers" FILES ${ALL_HEADERS_FILTER})
 # Sources
 source_group("Source" FILES ${SOURCES})
 
+# Other groups
+source_group("Doc" FILES ${DOC_FILTER})
 
 
 SET(ECLIPSE_GCC_STATIC_ANALYSIS -g -pedantic -Wall -Wextra -Wconversion -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wswitch-default -Wundef -Weffc++ -Wfloat-equal -c -fmessage-length=0)
@@ -111,8 +163,8 @@ set_property(TARGET ${TARGET_NAME} PROPERTY SUBSYSTEM CONSOLE)
 #============================Google Test========================================
 # Source code, that will be tested
 set(TARGET_TESTABLE_CODE
-    src/cpp-common.cpp
-	#src/cpp-idiom/pimpl.cpp
+    # mustn't be file with main function
+    src/concurrency/multithread-for-loop.cpp
 )
 # Source code of tests
 set(SOURCES_FILTER_TESTS

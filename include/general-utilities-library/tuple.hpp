@@ -1,35 +1,23 @@
 ﻿#ifndef TUPLE_HPP
 #define TUPLE_HPP
 
+//#include <concepts> // for requires
 #include <tuple>
-#include <concepts>
+//#include <memory>	// weak_ptr
+
+//#include "metaprogramming-library/type-traits/type-traits.hpp"
+
 
 /** C++ General Support Library */
 namespace common {
 
-	/** Implementation of ApplyTuple. */
-	template<typename FuncType, typename... TupleArgsTypes, size_t... index>
-	//template<typename FuncType, size_t... index, typename... TupleElemTypes>
-	requires std::is_invocable_v<FuncType, TupleArgsTypes...>
-	inline void ApplyTupleElement(FuncType&& func_obj,
-								  std::tuple<TupleArgsTypes&&...>& tuple_p,
-								  std::index_sequence<index...>) {
-		func_obj(std::get<index>(tuple_p)...);
-	}
 
-	/** Invoke callable object with tuple args. Needs C++ 11. */
-	template<typename FuncType, typename... TupleArgsTypes>
-	requires std::is_invocable_v<FuncType, TupleArgsTypes...>
-	inline void ApplyTuple(FuncType&& func_obj, std::tuple<TupleArgsTypes&&...>& tuple_p) {
-		// Can't make const args tuple
-		ApplyTupleElement(std::forward<FuncType>(func_obj),
-					tuple_p,
-					std::make_index_sequence<std::tuple_size_v<std::tuple<TupleArgsTypes&&...>>>{});
-	}
+} // !namespace common
 
 
 
 
+namespace help{
 	/** Variadic Function Call */
 	// Convert string data to data of field in data table
 	/*template<const size_t Index, typename... ColumnT>
@@ -54,6 +42,6 @@ namespace common {
 		(ConvertDataOnIndexTuple<Indexes>(buffer_tuple, buffer_str), ...);
 	}*/
 
-} // !namespace common
+}
 
 #endif // !TUPLE_HPP

@@ -60,12 +60,12 @@ namespace common {
 
 					template<typename F, typename... Args>
 					auto enqueue(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F, Args...>::type> {
-						using ReturnType = typename std::invoke_result<F, Args...>::type;
+						using ReturnT = typename std::invoke_result<F, Args...>::type;
 
-						auto task = std::make_shared<std::packaged_task<ReturnType()>>(
+						auto task = std::make_shared<std::packaged_task<ReturnT()>>(
 							std::bind(std::forward<F>(f), std::forward<Args>(args)...));
 
-						std::future<ReturnType> result = task->get_future();
+						std::future<ReturnT> result = task->get_future();
 						{
 							std::lock_guard<std::mutex> lock(queue_mutex_);
 							task_queue_.emplace([task]() { (*task)(); });
