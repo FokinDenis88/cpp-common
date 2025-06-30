@@ -190,6 +190,28 @@ namespace common {
 	}
 
 
+//======================Apply free function. For c++ 11==============================================
+
+	/** Implementation of ApplyTuple. */
+	template<typename FuncType, typename... TupleArgsTypes, size_t... index>
+	//template<typename FuncType, size_t... index, typename... TupleElemTypes>
+	requires std::is_invocable_v<FuncType, TupleArgsTypes...>
+	inline void ApplyImpl(FuncType&& func_obj,
+						std::tuple<TupleArgsTypes&&...>& tuple_p,
+						std::index_sequence<index...>) {
+		func_obj(std::get<index>(tuple_p)...);
+	}
+
+	/** Invoke callable object with tuple args. Needs C++ 11. */
+	template<typename FuncType, typename... TupleArgsTypes>
+	requires std::is_invocable_v<FuncType, TupleArgsTypes...>
+	inline void Apply(FuncType&& func_obj, std::tuple<TupleArgsTypes&&...>& tuple_p) {
+		// Can't make const args tuple
+		ApplyImpl(std::forward<FuncType>(func_obj), tuple_p,
+				std::make_index_sequence<std::tuple_size_v<std::tuple<TupleArgsTypes&&...>>>{});
+	}
+
+
 //=======================Apply Method with tuple of arguments==============================================================
 
 	/** Implementation of ApplyMethod. */
