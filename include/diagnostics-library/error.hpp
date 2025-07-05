@@ -159,14 +159,14 @@ namespace error {
 		virtual ~Error() = default;
 
 		Error(const ErrorInfoT& info, FormatterT formatter = DefaultFormatter)
-			: error_info_{ info },
-			formatter_{ std::move(formatter) },
-			output_message_{} {
+				: error_info_{ info },
+				formatter_{ std::move(formatter) },
+				output_message_{} {
 		}
 		Error(ErrorInfoT&& info, FormatterT formatter = DefaultFormatter)
-			: error_info_{ std::move(info) },
-			formatter_{ std::move(formatter) },
-			output_message_{} {
+				: error_info_{ std::move(info) },
+				formatter_{ std::move(formatter) },
+				output_message_{} {
 		}
 
 

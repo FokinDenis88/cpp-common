@@ -21,29 +21,34 @@ namespace common {
 
 	using ExpiredFnT = decltype([](const auto& value_weak_ptr) { return value_weak_ptr.expired(); });
 
+//======================EqualOwnerWeakPtr======================================================
 
-	/** Function to compare objects via shared_ptr inside weak_ptr */
+	/** Functor to compare objects via shared_ptr inside weak_ptr */
 	template<typename ValueT>
-	struct IsWeakPtrOwnerEqual {
-		/**
-		 * Compares if two weak_ptr are alive and have the same owner, stored object.
-		 *
-		 * Complexity: amortized O(1)
-		 *
-		 * @param	shared_ptr search ptr. Is shared for decreasing number of locks.
-		 * @param	current_ptr
-		 * @return	result of equality check
-		 */
-		inline bool operator()(const std::shared_ptr<ValueT>& lhs,
-								const std::shared_ptr<ValueT>& rhs) const noexcept {
-			// a==b, if (not a<b) and (not b<a)
-			return lhs && rhs && !lhs.owner_before(rhs) && !rhs.owner_before(lhs);
-		}
-
-
+	struct EqualOwnerWeakPtr {
 		/**
 		* Compares if two weak_ptr are alive and have the same owner, stored object.
 		* Use, when first weak_ptr is locked for performance.
+		*
+		* Complexity: amortized O(1)
+		*
+		* @param searched_shared		search ptr. Is shared for decreasing number of locks.
+		* @param current_ptr			rhs comparation object
+		* @return						result of equality check
+		*/
+		inline bool operator()(const std::weak_ptr<ValueT>& lhs,
+								const std::weak_ptr<ValueT>& rhs) const noexcept {
+			auto lhs_shared = lhs.lock();
+			auto rhs_shared = rhs.lock();
+
+			// a==b, if (not a<b) and (not b<a)
+			return lhs_shared && rhs_shared && !lhs_shared.owner_before(rhs_shared) &&
+					!rhs_shared.owner_before(lhs_shared);
+		}
+
+		/**
+		* Compares if two weak_ptr are alive and have the same owner, stored object.
+		* Use this version when you already have a locked shared_ptr.
 		*
 		* Complexity: amortized O(1)
 		*
@@ -57,11 +62,76 @@ namespace common {
 
 			// a==b, if (not a<b) and (not b<a)
 			return searched_shared && current_shared && !searched_shared.owner_before(current_shared) &&
-					!current_shared.owner_before(searched_shared);
+				!current_shared.owner_before(searched_shared);
 		}
-	}; // !struct IsWeakPtrOwnerEqual
+	}; // !struct EqualOwnerWeakPtr
+
+	/**
+	* Compares if two weak_ptr are alive and have the same owner, stored object.
+	* Use, when first weak_ptr is locked for performance.
+	*
+	* Complexity: amortized O(1)
+	*
+	* @param searched_shared		search ptr. Is shared for decreasing number of locks.
+	* @param current_ptr			rhs comparation object
+	* @return						result of equality check
+	*/
+	template<typename ValueT>
+	inline bool EqualOwnerWeakPtrFn(const std::weak_ptr<ValueT>& lhs,
+									  const std::weak_ptr<ValueT>& rhs) noexcept {
+		return EqualOwnerWeakPtr<ValueT>()(lhs, rhs);
+	}
+
+	/**
+	* Compares if two weak_ptr are alive and have the same owner, stored object.
+	* Use this version when you already have a locked shared_ptr.
+	*
+	* Complexity: amortized O(1)
+	*
+	* @param searched_shared		search ptr. Is shared for decreasing number of locks.
+	* @param current_ptr			rhs comparation object
+	* @return						result of equality check
+	*/
+	template<typename ValueT>
+	inline bool EqualOwnerWeakPtrFn(const std::shared_ptr<ValueT>& searched_shared,
+									const std::weak_ptr<ValueT>& current_ptr) noexcept {
+		return EqualOwnerWeakPtr<ValueT>()(searched_shared, current_ptr);
+	}
 
 
+	/** Function to compare objects via shared_ptr inside weak_ptr */
+	template<typename ValueT>
+	struct EqualOwnerSharedPtr {
+		/**
+		 * Compares if two shared_ptr have the same owner.
+		 *
+		 * Complexity: amortized O(1)
+		 *
+		 * @param	shared_ptr search ptr. Is shared for decreasing number of locks.
+		 * @param	current_ptr
+		 * @return	result of equality check
+		 */
+		inline bool operator()(const std::shared_ptr<ValueT>& lhs,
+								const std::shared_ptr<ValueT>& rhs) const noexcept {
+			// a==b, if (not a<b) and (not b<a)
+			return lhs && rhs && !lhs.owner_before(rhs) && !rhs.owner_before(lhs);
+		}
+	}; // !struct EqualOwnerSharedPtr
+
+
+	/** A specialized version of the hash function for std::weak_ptr */
+	template<typename ValueT>
+	struct WeakPtrHash { // ! not the best choice. will be many collisions, if many weak_ptr expired.
+		size_t operator()(const std::weak_ptr<ValueT>& wp) const noexcept {
+			if (auto sp = wp.lock()) {
+				return std::hash<std::shared_ptr<ValueT>>{}(sp);
+			}
+			return 0;
+		}
+	};
+	// Hash for unordered_set, unordered_map must be stable and not to change with expiration of weak_ptr
+
+//===========================================================================================================
 
 	/**
 	 * Erase all expired weak_ptr from container
@@ -75,7 +145,7 @@ namespace common {
 		if (container.empty()) { return; }
 
 		auto expired = [](const auto& value_ptr) { return value_ptr.expired(); };
-		GenericRemoveIf(container, expired, policy);		// O(n)
+		generic::RemoveIf(container, expired, policy);		// O(n)
 	};
 
 	/**
@@ -85,9 +155,9 @@ namespace common {
 	 * Mutex: write
 	 */
 	template<typename ContainerT, typename ExecPolicyT>
-	inline void EraseNExpiredWeakPtr(ContainerT& container,
-									const size_t expired_count,
-									ExecPolicyT policy = std::execution::seq) {
+	inline void EraseNExpired(ContainerT& container,
+								const size_t expired_count,
+								ExecPolicyT policy = std::execution::seq) {
 		if (container.empty() || expired_count == 0) { return; } // Precondition
 		//static_assert(std::is_same_v<typename ContainerT::value_type, std::weak_ptr<ValueT>>,
 						//"The type mismatch between container elements and weak_ptr");
@@ -100,7 +170,7 @@ namespace common {
 			}
 			return false;
 		}; // !lambda
-		GenericRemoveIf(container, expired_fn, policy);		// O(n)
+		generic::RemoveIf(container, expired_fn, policy);		// O(n)
 	};
 	// TODO: may work not on expired_count, but on it_last_expired - iterator to last expired.
 
@@ -130,7 +200,7 @@ namespace common {
 			std::shared_ptr<ValueT> searched_shared{};
 			auto equal_owner = [&searched_shared, &expired_count](const auto& current_ptr) {
 				if (current_ptr.expired()) { ++expired_count; }
-				return IsWeakPtrOwnerEqual(searched_shared, current_ptr);								// O(1)
+				return EqualOwnerWeakPtrFn(searched_shared, current_ptr);								// O(1)
 			}; // !lambda end
 			{
 				searched_shared = searched_ptr.lock();	// weak_ptr
@@ -140,8 +210,8 @@ namespace common {
 			// std::move(searched_ptr) is no necessary, cause weak_ptr hold 2 pointers.
 			// Copy or Move operations are equal in performance.
 
-			//auto result_fn{ FindEqualWeakPtr(container, searched_ptr, policy) }; // set = O(log n) ; others = O(n)
-			std::tie(it_equal, expired_count) = FindEqualWeakPtr(container, searched_ptr, policy); // set = O(log n) ; others = O(n)
+			//auto result_fn{ FindEqualOwnerWeakPtr(container, searched_ptr, policy) }; // set = O(log n) ; others = O(n)
+			std::tie(it_equal, expired_count) = FindEqualOwnerWeakPtr(container, searched_ptr, policy); // set = O(log n) ; others = O(n)
 			//it_equal = result_fn.first;
 			//expired_count = result_fn.second;
 			if (it_equal != container.end()) { container.erase(it_equal); }
@@ -167,10 +237,45 @@ namespace common {
 										ExecPolicyT policy = std::execution::seq) {
 		size_t expired_count{ EraseEqualWeakPtr(container, searched_ptr, policy) };
 		// Cleanup expired weak_ptr
-		EraseNExpiredWeakPtr(container, expired_count, policy);
+		EraseNExpired(container, expired_count, policy);
 	}
 
 //===========================Find weak_ptr====================================================
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
+	inline auto FindEqualOwnerWeakPtr(const ContainerT& container,
+		const std::weak_ptr<ValueT> searched_ptr,
+		ExecPolicyT policy = std::execution::seq)
+		-> std::pair<decltype(container.end()), size_t>
+	{
+		using value_type = typename ContainerT::value_type;
+		auto result_fn{ std::make_pair(container.end(), size_t{}) };
+		if (container.empty()) { return result_fn; } // precondition
+		static_assert(std::is_same_v<value_type, std::weak_ptr<ValueT>>,
+			"The type mismatch between container elements and weak_ptr");
+
+		auto& it_equal{ result_fn.first };
+		size_t& expired_count{ result_fn.second };
+
+
+		std::shared_ptr<ValueT> searched_shared{};
+		auto equal_owner = [&searched_shared, &expired_count](const auto& current_ptr) {
+			if (current_ptr.expired()) { ++expired_count; }
+			return EqualOwnerWeakPtrFn(searched_shared, current_ptr);								// O(1)
+			}; // !lambda
+
+		{
+			// But better to lock for lowering number of locks in IsEqualWeakPtr
+			searched_shared = searched_ptr.lock();
+			if (searched_shared) { // minimal lock section
+				it_equal = std::find_if(policy, container.begin(), container.end(), equal_owner); // O(n)
+			}
+		} // !weak_ptr lock
+
+
+		return result_fn;
+	}
+
+
 
 	/**
 	 * Find first weak_ptr, that is alive and has same stored pointer.
@@ -182,9 +287,9 @@ namespace common {
 	 *			Second = size_t count of expired weak_ptr for cleanup.
 	 */
 	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
-	inline auto FindEqualWeakPtr(const ContainerT& container,
-								const std::weak_ptr<ValueT> searched_ptr,
-								ExecPolicyT policy = std::execution::seq)
+	inline auto FindEqualOwnerWeakPtr(const ContainerT& container,
+									const std::weak_ptr<ValueT> searched_ptr,
+									ExecPolicyT policy = std::execution::seq)
 			-> std::pair<decltype(container.end()), size_t>
 	{
 		using value_type = typename ContainerT::value_type;
@@ -196,27 +301,27 @@ namespace common {
 		auto& it_equal{ result_fn.first };
 		size_t& expired_count{ result_fn.second };
 
-		if constexpr (std::is_same_v< ContainerT, std::set<value_type> >) { // set
-			// set must be compared with owner_less in declaration of set variable
-			it_equal = container.find(searched_ptr);												// O(log n)
-		} else { // All other types of containers
-			std::shared_ptr<ValueT> searched_shared{};
-			auto equal_owner = [&searched_shared, &expired_count](const auto& current_ptr) {
-				if (current_ptr.expired()) { ++expired_count; }
-				return IsWeakPtrOwnerEqual(searched_shared, current_ptr);								// O(1)
-			}; // !lambda
-			{
-				// mustn't lock for long time, cause of resource use and life time
-				// But better to lock for lowering number of locks in IsEqualWeakPtr
-				searched_shared = searched_ptr.lock();
-				if (searched_shared) { // minimal lock section
-					it_equal = std::find_if(policy, container.begin(), container.end(), equal_owner); // O(n)
-				}
-			} // !weak_ptr lock
-		}
+
+		std::shared_ptr<ValueT> searched_shared{};
+		auto equal_owner = [&searched_shared, &expired_count](const auto& current_ptr) {
+			if (current_ptr.expired()) { ++expired_count; }
+			return EqualOwnerWeakPtrFn(searched_shared, current_ptr);								// O(1)
+		}; // !lambda
+
+		{
+			// But better to lock for lowering number of locks in IsEqualWeakPtr
+			searched_shared = searched_ptr.lock();
+			if (searched_shared) { // minimal lock section
+				it_equal = std::find_if(policy, container.begin(), container.end(), equal_owner); // O(n)
+			}
+		} // !weak_ptr lock
+
 
 		return result_fn;
 	}
+	//if constexpr (std::is_same_v< ContainerT, std::set<value_type> >) { // associative container must be compared by key
+	//	it_equal = container.find(searched_ptr);												// O(log n)
+	//} else { // All other types of containers
 
 	/**
 	 * Find first weak_ptr, that is alive and has same stored pointer.
@@ -233,9 +338,9 @@ namespace common {
 										ExecPolicyT policy = std::execution::seq)
 			-> decltype(container.end())
 	{
-		auto result_fn{ FindEqualWeakPtr(container, searched_ptr, policy) };
+		auto result_fn{ FindEqualOwnerWeakPtr(container, searched_ptr, policy) };
 		// Cleanup expired weak_ptr
-		EraseNExpiredWeakPtr(container, result_fn.second, policy);
+		EraseNExpired(container, result_fn.second, policy);
 		return result_fn.first;
 	}
 

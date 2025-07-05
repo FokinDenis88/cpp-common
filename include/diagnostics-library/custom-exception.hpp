@@ -32,7 +32,7 @@ namespace error {
 	 */
 	template<typename ErrorT>
 	inline std::string GenerateExceptionMessage(const ErrorT& error,
-		const char* base_what = '\0') {
+												const char* base_what = '\0') {
 		std::string message{ error.GetMessage() };
 		if (base_what) {
 			message += "\n";
@@ -73,21 +73,21 @@ namespace error {
 
 
 		CustomException(const ExceptionT& exception, const ErrorT& error)
-			: ExceptionT{ exception }, // Base class initialization
-			error_{ error } {
+				: ExceptionT{ exception }, // Base class initialization
+				error_{ error } {
 		}
 		CustomException(const ExceptionT& exception,
-			const ErrorInfoT& info,
-			FormatterT formatter = DefaultFormatter)
-			: ExceptionT{ exception }, // Base class initialization
-			error_{ info, std::move(formatter) } {
+						const ErrorInfoT& info,
+						FormatterT formatter = DefaultFormatter)
+				: ExceptionT{ exception }, // Base class initialization
+				error_{ info, std::move(formatter) } {
 		}
 		template<typename ErrorInfoT>
 		CustomException(const ExceptionT& exception,
-			ErrorInfoT&& info,
-			FormatterT formatter = DefaultFormatter)
-			: ExceptionT{ exception }, // Base class initialization
-			error_{ std::forward<ErrorInfoT>(info), std::move(formatter) } {
+						ErrorInfoT&& info,
+						FormatterT formatter = DefaultFormatter)
+				: ExceptionT{ exception }, // Base class initialization
+				error_{ std::forward<ErrorInfoT>(info), std::move(formatter) } {
 		}
 
 
@@ -172,14 +172,14 @@ namespace error {
 
 
 		ConcreteException(const std::system_error& exception,
-			const ErrorInfoCode& info,
-			FormatterT formatter = DefaultFormatter)
-			: ConcreteExceptionErrorT{ exception, info, std::move(formatter) } { // move formatter, cause resources maybe in fn
+							const ErrorInfoCode& info,
+							FormatterT formatter = DefaultFormatter)
+				: ConcreteExceptionErrorT{ exception, info, std::move(formatter) } { // move formatter, cause resources maybe in fn
 		}
 		ConcreteException(const std::system_error& exception,
-			ErrorInfoCode&& info,
-			FormatterT formatter = DefaultFormatter)
-			: ConcreteExceptionErrorT{ exception, std::forward<ErrorInfoCode>(info), std::move(formatter) } {
+							ErrorInfoCode&& info,
+							FormatterT formatter = DefaultFormatter)
+				: ConcreteExceptionErrorT{ exception, std::forward<ErrorInfoCode>(info), std::move(formatter) } {
 		}
 
 	}; // !class ConcreteException

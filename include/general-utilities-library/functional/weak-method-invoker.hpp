@@ -109,7 +109,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 						"The specified method does not exist in the given class.");
 		static_assert(std::is_same_v< std::remove_cvref_t<ArgsT>, std::remove_cvref_t<TupleArgsT> >,
 						"Types of arguments in member function pointer and in tuple of arguments must be equal.");
-
+		// TODO: maybe make checks not static_assert? Maybe make them dynamic condition in function? Maybe make this in MethodAction
 
 		WeakMethodInvoker() = default;
 
@@ -154,8 +154,12 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		*
 		* @return		tuple(success flag, return value of member function call. Or Nothing = void return )
 		*/
-		inline WeakMemFnReturnT operator()() const { // object_ptr will be locked inside InvokeMethodPtrTuple
-			return InvokeMethodPtrTuple(mem_fn, object_ptr, std::forward<TupleArgsT>(args));
+		inline WeakMemFnReturnT operator()() const { // object_ptr will be locked inside ApplyMethodByPtr
+			return ApplyMethodByPtr(mem_fn, object_ptr, std::forward<TupleArgsT>(args));
+		}
+
+		bool expired() const noexcept {
+            return object_ptr_.expired();
 		}
 
 		/** Function for saving invariant */
@@ -164,25 +168,26 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			return false;
 		}
 
-//-------------------Comparations & ----------------------------------------------
+		template<typename MemFnPtrNewT, typename ObjectNewT, typename TupleArgsNewT>
+		bool IsSameMethod(const WeakMethodInvoker<MemFnPtrNewT, ObjectNewT, TupleArgsNewT>& call_object) const noexcept {
+			return	std::is_same_v<std::remove_cvref_t<MemFnPtrT>, std::remove_cvref_t<MemFnPtrNewT>> &&
+					std::is_same_v<std::remove_cvref_t<ObjectT>, std::remove_cvref_t<ObjectNewT>> &&
+					std::is_same_v<std::remove_cvref_t<TupleArgsT>, std::remove_cvref_t<TupleArgsNewT> >;
+		}
 
-		bool operator==(const WeakMethodInvoker& other) const noexcept {
-			// compare mem_fn
-			if (mem_fn_ != other.mem_fn_) { return false; }
-
-			// object_ptr
-			if (!IsWeakPtrOwnerEqual(object_ptr_, other.object_ptr_)) { return false; }
-
-			// compare mem_fn
-			if (!(args_ == other.args_)) { return false; }
-
-			return true;
+//-------------------Comparations-------------------------------------------------
+		bool operator==(const WeakMethodInvoker& other) const noexcept { // fn calls must be with equal invoker class template args
+			return	mem_fn_ == other.mem_fn_ &&
+					EqualOwnerWeakPtr(object_ptr_, other.object_ptr_) &&
+					args_ == other.args_;
 		}
 
 		/** It is very difficult to compare two member function call. Unavailable task. So there is stub here. */
-		bool operator<(const WeakMethodInvoker& other) const noexcept {
+		bool operator<(const WeakMethodInvoker& other) const noexcept { // stub
 			//return std::tie(mem_fn_, object_ptr_, args_) < std::tie(other.mem_fn_, other.object_ptr_, other.args_);
 		}
+		// TODO: it is very difficult to do < with function calls. What's the criteria?
+		// only if mem_fn is equal && object_ptr is equal && all args are < other args.
 
 //----------------------Hashing---------------------------------------------------
 
@@ -241,8 +246,8 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	private:
 		/** Function for saving invariant */
 		inline bool IsInvokeDataValid(MemFnPtrT mem_fn,
-			std::weak_ptr<ObjectT> object_ptr,
-			TupleArgsT&& args) const noexcept {
+									std::weak_ptr<ObjectT> object_ptr,
+									TupleArgsT&& args) const noexcept {
 			// Main check is done at template instantiation in static_asserts of class
 			if (!object_ptr.expired() && mem_fn) { return true; }
 			// TODO: add more conditions. f.e. args count condition.
@@ -381,32 +386,38 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	*
 	* Class for Wrapper storing weak member function call.
 	*/
-	class IMethodAction {
+	class IWeakMethodAction {
 	protected:
-		IMethodAction() = default;
-		IMethodAction(const IMethodAction&) = delete; // polymorphic guard. class suppress copy/move C.67
-		IMethodAction& operator=(const IMethodAction&) = delete;
-		IMethodAction(IMethodAction&&) noexcept = delete;
-		IMethodAction& operator=(IMethodAction&&) noexcept = delete;
+		IWeakMethodAction() = default;
+		IWeakMethodAction(const IWeakMethodAction&) = delete; // polymorphic guard. class suppress copy/move C.67
+		IWeakMethodAction& operator=(const IWeakMethodAction&) = delete;
+		IWeakMethodAction(IWeakMethodAction&&) noexcept = delete;
+		IWeakMethodAction& operator=(IWeakMethodAction&&) noexcept = delete;
 	public:
-		virtual ~IMethodAction() = default;
+		virtual ~IWeakMethodAction() = default;
 
 		/** Copy this object and return new copy. */
-		virtual std::unique_ptr<IMethodAction> Clone() const noexcept = 0;
+		virtual std::unique_ptr<IWeakMethodAction> Clone() const noexcept = 0;
 
 		/** Move this object to new unique_ptr. */
-		virtual std::unique_ptr<IMethodAction> TransferOwnership() noexcept = 0;
+		virtual std::unique_ptr<IWeakMethodAction> TransferOwnership() noexcept = 0;
 
 
-		/** Call action without return value. */
-		virtual void operator()() const = 0;
+		/**
+		* Call action without return value.
+		*
+		* @return		success flag
+		*/
+		virtual bool operator()() const = 0;
 
-		virtual bool operator==(const IMethodAction& other) const noexcept = 0;
+		virtual bool operator==(const IWeakMethodAction& other) const noexcept = 0;
 
-		virtual bool operator<(const IMethodAction& other) const noexcept = 0;
+		virtual bool operator<(const IWeakMethodAction& other) const noexcept = 0;
 
 		/** Return hash value for this object. */
 		virtual size_t Hash() const noexcept = 0;
+
+		virtual bool expired() const noexcept = 0;
 
 	}; // !class IWeakMethodInvokerWrap
 
@@ -417,7 +428,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	* Pattern: Bridge. Used for type erasing and storing in container.
 	*/
 	template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
-	class WeakMethodAction : public IMethodAction {
+	class WeakMethodAction : public IWeakMethodAction {
 	public:
 		using WeakMethodInvokerType = WeakMethodInvoker<MemFnPtrT, ObjectT, TupleArgsT>;
 
@@ -450,12 +461,12 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		}
 
 		/** Copy this object and return new copy. */
-		std::unique_ptr<IMethodAction> Clone() const noexcept override {
+		std::unique_ptr<IWeakMethodAction> Clone() const noexcept override {
 			return std::make_unique<WeakMethodInvokerType>(invoker_);
 		}
 
 		/** Move this object to new unique_ptr. */
-		std::unique_ptr<IMethodAction> TransferOwnership() noexcept override {
+		std::unique_ptr<IWeakMethodAction> TransferOwnership() noexcept override {
 			return std::make_unique<WeakMethodInvokerType>(std::move(invoker_));
 		}
 
@@ -477,22 +488,36 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		}
 
 
-		/** Invoke action without return value. */
-		void operator()() const override {
-			invoker_();
+		/**
+		* Invoke action without return value.
+		*
+		* @return		success flag
+		*/
+		bool operator()() const override {
+			return std::get<0>(invoker_.operator()());
 		}
 
-		bool operator==(const IMethodAction& other) const noexcept override {// it is not safe, if there is more inhereted classes
-			return invoker_.operator==(static_cast<const WeakMethodInvokerType>(other));
+		bool operator==(const IWeakMethodAction& other) const noexcept override {// it is not safe, if there is more inhereted classes
+			if ( auto other_ptr = dynamic_cast<const WeakMethodAction<MemFnPtrT,ObjectT, TupleArgsT>*>(&other) ) {
+				return invoker_ == other_ptr->invoker_;
+			}
+			return false;
 		}
 
-		bool operator<(const IMethodAction& other) const noexcept override {
-			return invoker_.operator<(static_cast<const WeakMethodInvokerType>(other));
+		bool operator<(const IWeakMethodAction& other) const noexcept override {
+			if ( auto other_ptr = dynamic_cast<const WeakMethodAction<MemFnPtrT, ObjectT, TupleArgsT>*>(&other) ) {
+				return invoker_ < other_ptr->invoker_;
+			}
+			return false;
 		}
 
 		/** Return hash value for this object. */
 		size_t Hash() const noexcept override {
 			return invoker_.Hash();
+		}
+
+		bool expired() const noexcept override {
+			return invoker_.expired();
 		}
 
 	private:
@@ -505,14 +530,22 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	*
 	* Pattern: Bridge. Used for type erasing and storing in container.
 	*/
-	class MethodAction { // TODO: !refactor MethodAction
+	class MethodActionWrap { // TODO: !refactor MethodAction
 	public:
-		MethodAction() = default;
-		MethodAction(const MethodAction&) = delete; // polymorphic guard. class suppress copy/move C.67
-		MethodAction& operator=(const MethodAction&) = delete;
-		MethodAction(MethodAction&&) noexcept = default;
-		MethodAction& operator=(MethodAction&&) noexcept = default;
-		~MethodAction() = default;
+		MethodActionWrap() = default; // TODO: maybe save invariant, that there is no empty impl_ and delete impl_ != nullptr checks ?
+		MethodActionWrap(const MethodActionWrap& other)
+				: impl_{ other.impl_ ? other.impl_->Clone() : nullptr } {
+		}
+		MethodActionWrap& operator=(const MethodActionWrap& other) {
+			if (this != &other) {
+				if (other.impl_) { impl_ = other.impl_->Clone(); }
+				else { impl_.reset(); }
+			}
+            return *this;
+		}
+		MethodActionWrap(MethodActionWrap&&) noexcept = default;
+		MethodActionWrap& operator=(MethodActionWrap&&) noexcept = default;
+		~MethodActionWrap() = default;
 
 		/**
 		* Save call data in weak member function call object.
@@ -522,9 +555,9 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		* @param args			arguments for member function call
 		*/
 		template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
-		MethodAction(MemFnPtrT					mem_fn,
-					std::weak_ptr<ObjectT>		object_ptr,
-					TupleArgsT&&				args)
+		MethodActionWrap(MemFnPtrT					mem_fn,
+						std::weak_ptr<ObjectT>		object_ptr,
+						TupleArgsT&&				args)
 			: impl_{ MakeImpl(mem_fn, object_ptr, std::forward<TupleArgsT>(args)) }
 		{
 		}
@@ -548,34 +581,24 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 																								std::forward<TupleArgsT>(args) );
 		}
 
-
-		/** Copy this object and return new copy. */
-		std::unique_ptr<IMethodAction> Clone() const noexcept {
-			if (!impl_) { return std::unique_ptr<IMethodAction>(); }
-			return impl_->Clone();
-		}
-
-		/** Move this object to new unique_ptr. */
-		std::unique_ptr<IMethodAction> TransferOwnership() noexcept {
-			if (!impl_) { return std::unique_ptr<IMethodAction>(); }
-			return impl_->TransferOwnership();
-		}
-
-
-		/** Call action without return value. */
-		void operator()() const {
-			if (!impl_) { return; }
-			impl_->operator()();
-		}
-
-		bool operator==(const IMethodAction& other) const noexcept {
+		/**
+		* Call action without return value.
+		*
+		* @return		success flag
+		*/
+		bool operator()() const {
 			if (!impl_) { return false; }
-			return impl_->operator==(other);
+			return impl_->operator()();
 		}
 
-		bool operator<(const IMethodAction& other) const noexcept {
+		bool operator==(const MethodActionWrap& other) const noexcept {
 			if (!impl_) { return false; }
-			return impl_->operator<(other);
+			return impl_->operator==(*other.impl_);
+		}
+
+		bool operator<(const MethodActionWrap& other) const noexcept {
+			if (!impl_) { return false; }
+			return impl_->operator<(*other.impl_);
 		}
 
 		/** Return hash value for this object. */
@@ -584,9 +607,16 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			return impl_->Hash();
 		}
 
+		bool expired() const noexcept {
+			if (!impl_) { return true; }
+			return impl_->expired();
+		}
+
+		bool HasInvoker() const noexcept { return impl_ != nullptr; }
+
 	private:
 		template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
-		inline std::unique_ptr<IMethodAction>
+		inline std::unique_ptr<IWeakMethodAction>
 				MakeImpl(MemFnPtrT				mem_fn,
 						std::weak_ptr<ObjectT>	object_ptr,
 						TupleArgsT&&			args) {
@@ -595,39 +625,48 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		}
 
 		template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
-		inline std::unique_ptr<IMethodAction> MakeImpl() {
+		inline std::unique_ptr<IWeakMethodAction> MakeImpl() {
 			return std::make_unique<WeakMethodAction<MemFnPtrT, ObjectT, TupleArgsT>>();
 		}
 //---------------Data-----------------------------------------------------------
 
-		std::unique_ptr<IMethodAction> impl_{};
+		std::unique_ptr<IWeakMethodAction> impl_{};
 		// TODO: Big problem with call data validity!
 		// TODO: checks for empty ptr impl_ or invariant impl_ != nullptr!
 		// TODO: try to erase all if (impl) by saving invariant impl_ != nullptr!
 		// TODO: maybe static asserts in templated functions?
 
-	}; // !class MethodAction
+	}; // !class MethodActionWrap
 
 } // !namespace common
 
 
 
-namespace std {
-	//template <> struct hash<WeakMemberFn> {
-	//	size_t operator()(const WeakMemberFn& wmf) const {
-	//		// Реализация хэширования
-	//	}
-	//};
+namespace std { // for standard container comparation functors
+	template<>
+	struct hash<::common::MethodActionWrap> {
+		size_t operator()(const ::common::MethodActionWrap& action) const {
+            return action.Hash();
+		}
+	};
 
-	//std::hash;
-	/*std::equal_to;
-	std::less;*/
+	template<>
+	struct equal_to<::common::MethodActionWrap> {
+		bool operator()(const ::common::MethodActionWrap& lhs,
+						const ::common::MethodActionWrap& rhs) const {
+			return lhs == rhs;
+		}
+	};
 
-	/*operator==
-	operator<*/
-}
+	template<>
+	struct less<::common::MethodActionWrap> {
+		bool operator()(const ::common::MethodActionWrap& lhs,
+						const ::common::MethodActionWrap& rhs) const {
+			return lhs < rhs;
+		}
+	};
 
-
+} // !namespace std
 
 
 

@@ -2,38 +2,70 @@
 #define GENERIC_CONTAINER_HPP
 
 
-#include <algorithm> // remove_if
-#include <execution> // execution policies
-#include <type_traits> // is_same_v
-#include <utility> // forward
+#include <algorithm>	// remove_if
+#include <execution>	// execution policies
+#include <type_traits>	// is_same_v
+#include <utility>		// forward
 
 // Container Types
 #include <forward_list>
 
+#include <set>				// Find
+#include <unordered_set>	// Find
+#include <map>				// Find
+#include <unordered_map>	// Find
 
-//#include <atomic>
+// TODO: Too many container types. Too complex
 
-//#include <functional>
-//#include <future>	// for Async Update
-//#include <memory>
-//#include <mutex>
-//#include <iterator>
-//#include <initializer_list>	// for AttachObservers
-//#include <string>
-//#include <shared_mutex>
-//#include <system_error>	// thread execution exception
-//#include <set>
-//#include <thread>	// concurrency and thread safety SubjectWeakHub
-
-//#include <list>
-
-//#include <unordered_set>
-//#include <vector>
+// TODO: add specific functions for that containers, for which solution is not optimal.
+// F.e. std::find is not optimal for std::unordered_set. Use specific container functions.
 
 
 /** Generic container processing. One function for all container types. */
-namespace generic {
-//===========================Generic Container Element Modification================================
+namespace generic { // Generic Container Element Modification
+
+	/**
+	* Add (emplace, push or insert) element from any type of container.
+	*
+	* Complexity: unordered_set, unordered_map = O(1).
+	* set, map                                 = O(log n).
+	* all other containers                     = O(n)
+	*
+	* Mutex: read
+	*/
+	template<typename ContainerT, typename ExecPolicyT>
+	inline decltype(auto) Find(const ContainerT& container,
+								const typename ContainerT::value_type& value,
+								ExecPolicyT policy = std::execution::seq) {
+		using value_type = typename ContainerT::value_type;
+
+		if constexpr (
+				std::is_same_v<std::remove_cvref_t<ContainerT>, std::unordered_set<value_type>>
+				|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::set<value_type>>
+				|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::unordered_map<value_type>>
+				|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::map<value_type>>
+				//|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::multiset<value_type>>
+				//|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::multimap<value_type>>
+			)
+		{ // associative containers have special find() method
+			return container.find(value);
+														//unordered_set, unordered_map			O(1)
+														// set, map								O(log n)
+		}
+		//else if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>, std::vector<bool>>) {
+		//	// Специальный случай для vector<bool>. Стандартные алгоритмы работают медленно.
+		//	auto pos = static_cast<size_t>(container.size());
+		//	for (size_t i = 0; i < pos; ++i) {
+		//		if (container[i]) break;
+		//	}
+		//	return pos != container.size();
+
+		//}
+		else { // All other types of containers
+			return std::find(policy, container.begin(), container.end(), value);				// O(n)
+		}
+	}
+
 
 	/**
 	* Add (emplace, push or insert) element from any type of container.
@@ -42,7 +74,7 @@ namespace generic {
 	* Mutex: write
 	*/
 	template<typename ContainerT>
-	inline void GenericAddElement(ContainerT& container, typename ContainerT::value_type&& value) {
+	inline void AddElement(ContainerT& container, typename ContainerT::value_type&& value) {
 		using value_type = typename ContainerT::value_type;
 
 		if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>,
@@ -60,25 +92,97 @@ namespace generic {
 	* Complexity: O(n)
 	* Mutex: write
 	*
-	* @param predicate for remove_if operation
+	* @param predicate		for remove_if operation
 	*/
 	template<typename ContainerT, typename ExecPolicyT>
-	inline void GenericRemoveIf(ContainerT& container,
+	inline void RemoveIf(ContainerT& container,
 								auto predicate,
 								ExecPolicyT policy = std::execution::seq) {
 		if (container.empty()) { return; } // Precondition
 
-		if constexpr (std::is_same_v<ContainerT,
+		if constexpr (std::is_same_v<std:: remove_cvref_t<ContainerT>,
 						std::forward_list<typename ContainerT::value_type>>) { // for Forward_list
-			container.remove_if(predicate); // erase-remove idiom is not for forward_list
+			container.remove_if(predicate); // erase-remove idiom is not for forward_list		// O(n)
 			// std::remove_if is not working with forward_list
 		} else { // All other containers
 			container.erase(std::remove_if(policy, container.begin(),
-											container.end(), predicate), container.end()); // O(n)
+											container.end(), predicate), container.end());		// O(n)
+		}
+		// TODO: erase-remove idiom can't be used for set, map, unordered_set, unordered_map, cause of elements can't be moved.
+		// Cause of structure of containers.
+		//
+		// Also can't be used for stack, queue.
+	}
+
+
+	/**
+	* Remove value from any type of container.
+	*
+	* Complexity: O(n)
+	* Mutex: write
+	*
+	* @param predicate for remove_if operation
+	*/
+	template<typename ContainerT, typename ExecPolicyT>
+	inline void EraseFirst(ContainerT& container,
+								const typename ContainerT::value_type& value,
+								ExecPolicyT policy = std::execution::seq) {
+		using value_type = typename ContainerT::value_type;
+		if (container.empty()) { return; } // Precondition
+
+		if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>,
+									std::forward_list<value_type>>) { // for Forward_list
+			container.remove(value);																	// O(n)
+		} else { // All other containers
+			container.erase(Find(container, value, policy));										// O(n)
 		}
 	}
-	// TODO: GenericErase(), GenericFind() ?
 
+	/**
+	* Remove element of container by iterator.
+	* All types of containers, except forward_list, cause it needs erase_after.
+	*
+	* Complexity: O(n)
+	* Mutex: write
+	*
+	* @param it			iterator to erasable element
+	* @return			iterator to the next element from erased element
+	*/
+	template<typename ContainerT>
+	inline auto EraseIt(ContainerT& container,
+						typename ContainerT::iterator it)
+			-> decltype(container.end())
+	{
+		using value_type = typename ContainerT::value_type;
+
+		if constexpr (!std::is_same_v<std::remove_cvref_t<ContainerT>,
+									std::forward_list<value_type>>) { // all except forward_list
+			if (it != container.end()) {
+				return container.erase(it);
+			}
+		}
+		return container.end();
+	}
+
+	/**
+	* Remove element of forward_list after iterator.
+	*
+	* Complexity: O(n)
+	* Mutex: write
+	*
+	* @param it			iterator to element previous to erasable
+	* @return			iterator to the next element from erased element
+	*/
+	template<typename ValueT>
+	inline auto EraseIt(std::forward_list<ValueT>& container,
+						typename std::forward_list<ValueT>::iterator it)
+			-> decltype(container.end())
+	{
+		if (it != container.before_begin()) {
+			return container.erase_after(it);
+		}
+		return container.end();
+	}
 
 } // !namespace generic
 
@@ -107,7 +211,7 @@ namespace generic {
 
 	2. Удаление одного элемента
 
-		У тебя уже есть GenericRemoveIf, теперь сделаем аналогичную функцию для удаления отдельного элемента :
+		У тебя уже есть RemoveIf, теперь сделаем аналогичную функцию для удаления отдельного элемента :
 
 	template<typename ContainerT>
 	inline void RemoveElement(ContainerT& container, const typename ContainerT::value_type& value) {
