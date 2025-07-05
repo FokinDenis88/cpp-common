@@ -37,7 +37,7 @@
 
 //memory-management-library
 //weak-ptr
-#include "memory-management-library/weak-ptr/weak-ptr.hpp"
+//#include "memory-management-library/weak-ptr/weak-ptr.hpp"
 
 #include "memory-management-library/generic-smart-ptr.hpp"
 

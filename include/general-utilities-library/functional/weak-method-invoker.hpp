@@ -6,7 +6,7 @@
 #include <tuple>
 #include <utility> // pair, forward
 
-#include "memory-management-library/weak-ptr/weak-ptr.hpp"
+//#include "memory-management-library/weak-ptr/weak-ptr.hpp"
 #include "general-utilities-library/functional/functional.hpp"
 
 
@@ -644,24 +644,24 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 
 namespace std { // for standard container comparation functors
 	template<>
-	struct hash<::common::MethodActionWrap> {
-		size_t operator()(const ::common::MethodActionWrap& action) const {
+	struct hash<common::MethodActionWrap> {
+		size_t operator()(const common::MethodActionWrap& action) const {
             return action.Hash();
 		}
 	};
 
 	template<>
-	struct equal_to<::common::MethodActionWrap> {
-		bool operator()(const ::common::MethodActionWrap& lhs,
-						const ::common::MethodActionWrap& rhs) const {
+	struct equal_to<common::MethodActionWrap> {
+		bool operator()(const common::MethodActionWrap& lhs,
+						const common::MethodActionWrap& rhs) const {
 			return lhs == rhs;
 		}
 	};
 
 	template<>
-	struct less<::common::MethodActionWrap> {
-		bool operator()(const ::common::MethodActionWrap& lhs,
-						const ::common::MethodActionWrap& rhs) const {
+	struct less<common::MethodActionWrap> {
+		bool operator()(const common::MethodActionWrap& lhs,
+						const common::MethodActionWrap& rhs) const {
 			return lhs < rhs;
 		}
 	};
