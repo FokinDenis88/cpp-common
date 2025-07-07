@@ -28,8 +28,8 @@ namespace {
 	}*/
 
 
-	namespace common {
-        using namespace ::common;
+	namespace util {
+        using namespace ::util;
 
 //================ApplyObjMemFn============================================
 
@@ -63,7 +63,7 @@ namespace {
                 MemFnPtrTrait<decltype(mem_fn)> traits{};
             }
         };
-        //common::MemFnPtrTraitsImpl<void __cdecl(int, double)>	{...}	common::MemFnPtrTraitsImpl<void __cdecl(int, double)>
+        //util::MemFnPtrTraitsImpl<void __cdecl(int, double)>	{...}	util::MemFnPtrTraitsImpl<void __cdecl(int, double)>
 
 
         TEST(MemberFunctionTests, GeneralTest) {
@@ -183,11 +183,11 @@ namespace {
 
 
 		namespace thread {
-			using namespace ::common::thread;
+			using namespace ::util::thread;
 
 		} // !namespace thread
 
-	} // !namespace common
+	} // !namespace util
 
 
     namespace error {
@@ -215,7 +215,7 @@ namespace {
         // Info
         // Test Suite, Test Case
         // TEST(ObjectPoolTest, ObjectPoolClass) {}
-        // Fixture class for common object for some Test Cases
+        // Fixture class for util object for some Test Cases
 
         struct Foo {
             int a{};

@@ -10,7 +10,7 @@
 #include "metaprogramming-library/type-traits/type-traits.hpp"
 
 
-namespace common {
+namespace util {
 	/*
 	* ApplyMemFn
 	* Summary:
@@ -335,7 +335,7 @@ namespace common {
 		// tuple_cat realization - concatenation of all args
 	}
 
-} // !namespace common
+} // !namespace util
 
 
 

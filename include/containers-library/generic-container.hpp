@@ -87,7 +87,7 @@ namespace generic { // Generic Container Element Modification
 	}
 
 	/**
-	* Remove element from any type of container.
+	* Remove element from the whole container of any type.
 	*
 	* Complexity: O(n)
 	* Mutex: write
@@ -96,8 +96,8 @@ namespace generic { // Generic Container Element Modification
 	*/
 	template<typename ContainerT, typename ExecPolicyT>
 	inline void RemoveIf(ContainerT& container,
-								auto predicate,
-								ExecPolicyT policy = std::execution::seq) {
+						auto predicate,
+						ExecPolicyT policy = std::execution::seq) {
 		if (container.empty()) { return; } // Precondition
 
 		if constexpr (std::is_same_v<std:: remove_cvref_t<ContainerT>,
@@ -112,6 +112,7 @@ namespace generic { // Generic Container Element Modification
 		// Cause of structure of containers.
 		//
 		// Also can't be used for stack, queue.
+		// TODO: what is return value? erase return iterator. remove_if in forward_list return void.
 	}
 
 
@@ -140,9 +141,10 @@ namespace generic { // Generic Container Element Modification
 
 	/**
 	* Remove element of container by iterator.
-	* All types of containers, except forward_list, cause it needs erase_after.
+	* All types of containers.
+	* There is specialization for forward_list, cause it needs erase_after.
 	*
-	* Complexity: O(n)
+	* Complexity: O(1)
 	* Mutex: write
 	*
 	* @param it			iterator to erasable element
@@ -167,7 +169,7 @@ namespace generic { // Generic Container Element Modification
 	/**
 	* Remove element of forward_list after iterator.
 	*
-	* Complexity: O(n)
+	* Complexity: O(1)
 	* Mutex: write
 	*
 	* @param it			iterator to element previous to erasable

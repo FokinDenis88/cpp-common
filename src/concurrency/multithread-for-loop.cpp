@@ -7,7 +7,7 @@
 #include "concurrency-support-library/multithreading.hpp"
 
 
-// Parralel For Loop Evaluation. There is no common resource. No Concurrency.
+// Parralel For Loop Evaluation. There is no util resource. No Concurrency.
 
 constexpr long long max_iteration{ 2000000000 };
 //constexpr long long max_iteration{ 3 };

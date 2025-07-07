@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Can be different with target
-set(PROJECT_NAME cpp-common)
+set(PROJECT_NAME cpp-utility)
 project(${PROJECT_NAME} VERSION 1.0.0)
 set(TARGET_NAME ${PROJECT_NAME})
 
@@ -53,7 +53,7 @@ set(ALL_HEADERS_FILTER
         include/general-utilities-library/functional/functional.hpp
         include/general-utilities-library/functional/weak-method-invoker.hpp
 
-    include/general-utilities-library/common.hpp
+    include/general-utilities-library/utility.hpp
     include/general-utilities-library/iaction.hpp
     include/general-utilities-library/ieditor.hpp
     include/general-utilities-library/interface-macros.hpp
@@ -68,7 +68,7 @@ set(ALL_HEADERS_FILTER
 
     # memory-management-library
         # weak-ptr
-        #include/memory-management-library/weak-ptr/weak-ptr.hpp
+        include/memory-management-library/weak-ptr/weak-ptr.hpp
 
     include/memory-management-library/generic-smart-ptr.hpp
 
@@ -95,7 +95,7 @@ set(ALL_HEADERS_FILTER
 
 
 set(SOURCES
-	src/cpp-common.cpp
+	src/cpp-utility.cpp
     src/concurrency/multithread-for-loop.cpp
 	)
 
@@ -169,7 +169,7 @@ set(TARGET_TESTABLE_CODE
 )
 # Source code of tests
 set(SOURCES_FILTER_TESTS
-	test/common/common-test.cpp
+	test/utility/utility-test.cpp
 )
 
 # Library with code of work project for linking to test project

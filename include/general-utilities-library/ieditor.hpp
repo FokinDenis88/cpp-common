@@ -1,7 +1,7 @@
 ﻿#ifndef IEDITOR_HPP
 #define IEDITOR_HPP
 
-namespace common {
+namespace util {
 
     /** Abstract. Interface for Editor class. CRUD operations */
     class IEditor {
@@ -28,6 +28,6 @@ namespace common {
         virtual void Delete() = 0;
     };
 
-} // !namespace common
+} // !namespace util
 
 #endif // !IEDITOR_HPP

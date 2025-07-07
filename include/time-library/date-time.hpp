@@ -5,7 +5,7 @@
 #include <chrono>
 #include <ctime>
 
-namespace common {
+namespace util {
 //namespace date_time {
 
     /**  predefined char count for ctime() */
@@ -65,7 +65,7 @@ namespace common {
     //    }
     //}
 
-} // !namespace common
+} // !namespace util
 
 #endif // !DATETIME_HPP
 

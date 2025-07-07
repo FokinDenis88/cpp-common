@@ -2,13 +2,13 @@
 Useful common snippets. Source code, that can be used in any project.
 
 ## Repository Web Pages
-[github](https://github.com/FokinDenis88/cpp-common)  <br>
-[gitlab (main)](https://gitlab.com/FokinDenis88/cpp-common.git) <br>
-[gitverse (Russia)](https://gitverse.ru/FokinDenis88/cpp-common)
+[github](https://github.com/FokinDenis88/cpp-utility.git)  <br>
+[gitlab (main)](https://gitlab.com/FokinDenis88/cpp-utility.git) <br>
+[gitverse (Russia)](https://gitverse.ru/FokinDenis88/cpp-utility.git)
 
 ## Installation
-1) git clone --branch develop https://gitlab.com/FokinDenis88/cpp-common.git
-2) (From the working dir = design-patterns)  cmake -B build/visual-studio
+1) git clone --branch develop https://gitlab.com/FokinDenis88/cpp-utility.git
+2) (From the working dir = cpp-utility)  cmake -B build/visual-studio
 
 ## Functions of Project
 ### algorithms-library

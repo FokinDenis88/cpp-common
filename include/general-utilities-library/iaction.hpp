@@ -1,7 +1,7 @@
 ﻿#ifndef IACTION_HPP
 #define IACTION_HPP
 
-namespace common {
+namespace util {
 
 	/**
 	* Abstract. Callable object, that invoke some action - function returning void.
@@ -21,6 +21,6 @@ namespace common {
 		virtual void operator()() = 0;
 	};
 
-} // !namespace common
+} // !namespace util
 
 #endif // !IACTION_HPP

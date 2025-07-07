@@ -10,7 +10,7 @@
 #include "general-utilities-library/functional/functional.hpp"
 
 
-namespace common {
+namespace util {
 
 	/*
 	* ApplyMemFn
@@ -178,7 +178,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 //-------------------Comparations-------------------------------------------------
 		bool operator==(const WeakMethodInvoker& other) const noexcept { // fn calls must be with equal invoker class template args
 			return	mem_fn_ == other.mem_fn_ &&
-					EqualOwnerWeakPtr(object_ptr_, other.object_ptr_) &&
+					EqualOwner(object_ptr_, other.object_ptr_) &&
 					args_ == other.args_;
 		}
 
@@ -638,30 +638,30 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 
 	}; // !class MethodActionWrap
 
-} // !namespace common
+} // !namespace util
 
 
 
 namespace std { // for standard container comparation functors
 	template<>
-	struct hash<common::MethodActionWrap> {
-		size_t operator()(const common::MethodActionWrap& action) const {
+	struct hash<util::MethodActionWrap> {
+		size_t operator()(const util::MethodActionWrap& action) const {
             return action.Hash();
 		}
 	};
 
 	template<>
-	struct equal_to<common::MethodActionWrap> {
-		bool operator()(const common::MethodActionWrap& lhs,
-						const common::MethodActionWrap& rhs) const {
+	struct equal_to<util::MethodActionWrap> {
+		bool operator()(const util::MethodActionWrap& lhs,
+						const util::MethodActionWrap& rhs) const {
 			return lhs == rhs;
 		}
 	};
 
 	template<>
-	struct less<common::MethodActionWrap> {
-		bool operator()(const common::MethodActionWrap& lhs,
-						const common::MethodActionWrap& rhs) const {
+	struct less<util::MethodActionWrap> {
+		bool operator()(const util::MethodActionWrap& lhs,
+						const util::MethodActionWrap& rhs) const {
 			return lhs < rhs;
 		}
 	};

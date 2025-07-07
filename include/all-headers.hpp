@@ -22,7 +22,7 @@
 #include "general-utilities-library/functional/functional.hpp"
 #include "general-utilities-library/functional/weak-method-invoker.hpp"
 
-#include "general-utilities-library/common.hpp"
+#include "general-utilities-library/utility.hpp"
 #include "general-utilities-library/iaction.hpp"
 #include "general-utilities-library/ieditor.hpp"
 #include "general-utilities-library/interface-macros.hpp"
@@ -37,7 +37,7 @@
 
 //memory-management-library
 //weak-ptr
-//#include "memory-management-library/weak-ptr/weak-ptr.hpp"
+#include "memory-management-library/weak-ptr/weak-ptr.hpp"
 
 #include "memory-management-library/generic-smart-ptr.hpp"
 

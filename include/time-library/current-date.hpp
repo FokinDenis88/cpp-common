@@ -5,7 +5,7 @@
 #include <chrono>
 #include <ctime>
 
-namespace common {
+namespace util {
     //namespace date_time {
 
     std::string CurrentDate() {
@@ -18,6 +18,6 @@ namespace common {
         return text;
     }
 
-} // !namespace common
+} // !namespace util
 
 #endif // !DATETIME_HPP_

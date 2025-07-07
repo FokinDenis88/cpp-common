@@ -5,7 +5,7 @@
 //#include <exception> // CustomException
 //#include <stdexcept> // different exception types
 
-namespace common {
+namespace util {
 
 	namespace thread {
 		/*
@@ -111,7 +111,7 @@ namespace common {
 		/*
 		* Container choices:
 		* 1) vector
-		* This is the most common and simplest option due to its ease of memory management and good performance
+		* This is the most util and simplest option due to its ease of memory management and good performance
 		* characteristics. A thread pool is usually implemented in such a way that a fixed number of threads are
 		* allocated in advance and stored in a vector.
 		*
@@ -135,7 +135,7 @@ namespace common {
 
 	} // !namespace thread
 
-} // !namespace common
+} // !namespace util
 
 
 #endif // !THREAD_HPP

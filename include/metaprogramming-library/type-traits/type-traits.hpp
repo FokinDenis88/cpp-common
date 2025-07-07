@@ -1,7 +1,7 @@
 ﻿#ifndef TYPE_TRAITS_HPP
 #define TYPE_TRAITS_HPP
 
-namespace common {
+namespace util {
 
 //================Check of args count===============================================
 
@@ -152,7 +152,7 @@ namespace common {
 	inline bool constexpr HasMemberFn_v = HasMemberFn<FnPtr>::value;
 
 
-} // !namespace common
+} // !namespace util
 
 
 

@@ -1,7 +1,7 @@
-﻿#ifndef COMMON_HPP
-#define COMMON_HPP
+﻿#ifndef UTILITY_HPP
+#define UTILITY_HPP
 
-namespace common {
+namespace util {
 	template<typename T>
 	class Cloneable {
 	public:
@@ -9,6 +9,6 @@ namespace common {
 	};
 
 
-} // !namespace common
+} // !namespace util
 
-#endif // !COMMON_HPP
+#endif // !UTILITY_HPP

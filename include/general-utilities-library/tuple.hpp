@@ -9,10 +9,10 @@
 
 
 /** C++ General Support Library */
-namespace common {
+namespace util {
 
 
-} // !namespace common
+} // !namespace util
 
 
 
