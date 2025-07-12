@@ -243,7 +243,7 @@ namespace generic { // Generic Container Element Modification
 	inline auto GetLastElement(const ContainerT& container) {
 		static_assert(!std::is_same_v<std::remove_cvref_t<ContainerT>, std::stack<typename ContainerT::value_type>>,
 			"Stack doesn't have a last element.");
-		return *(--container.end());
+		return *(__container.end());
 	}
 
 	4. Изменение порядка элементов

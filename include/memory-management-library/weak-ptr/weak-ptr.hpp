@@ -161,6 +161,7 @@ namespace util {
 
 	/**
 	 * Find first weak_ptr, that is alive and has same stored pointer.
+	 * Use EqualOwnerFn comparation function on each weak_ptr element in container.
 	 * With auto cleanup of expired weak_ptrs.
 	 *
 	 * Complexity: O(n).
@@ -240,8 +241,8 @@ namespace util {
 								ExecPolicyT policy = std::execution::seq)
 			-> decltype(container.end())
 	{
-		auto it_equal = FindEqualOwner(container, searched_ptr, policy);
-		return generic::EraseIt(container, it_equal);
+		auto it_equal = FindEqualOwner(container, searched_ptr, policy);	// O(n)
+		return generic::EraseIt(container, it_equal);						// O(1)
 	}
 
 	/**
@@ -261,8 +262,8 @@ namespace util {
 										ExecPolicyT policy = std::execution::seq)
 			-> decltype(container.end())
 	{
-		auto it_equal = FindEqualOwnerNClean(container, searched_ptr, policy);
-		return generic::EraseIt(container, it_equal);
+		auto it_equal = FindEqualOwnerNClean(container, searched_ptr, policy);	// O(n)
+		return generic::EraseIt(container, it_equal);							// O(1)
 	}
 
 
