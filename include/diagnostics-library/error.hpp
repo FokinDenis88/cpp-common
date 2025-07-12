@@ -196,7 +196,7 @@ namespace error {
 			}
 		}
 
-		//-----------------Data---------------------------------------------------
+		//_________________Data___________________________________________________
 
 		/** Error information, that helps to format error message. */
 		ErrorInfoT error_info_{};

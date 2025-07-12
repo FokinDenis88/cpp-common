@@ -311,7 +311,7 @@ gtest_discover_tests(${TEST_TARGET_NAME})
 # -o output file 	: write build output to output file
 # -Olevel			: optimize for code size and execution tim
 # -time 			: Time the execution of each subprocess
-# --version			: Display compiler version information
+# __version			: Display compiler version information
 # https://gcc.gnu.org/onlinedocs/gcc-6.2.0/gcc/Warning-Options.html#Warning-Options
 # -Wall				:
 # -Wextra			:

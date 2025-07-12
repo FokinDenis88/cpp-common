@@ -7,7 +7,7 @@ Useful common snippets. Source code, that can be used in any project.
 [gitverse (Russia)](https://gitverse.ru/FokinDenis88/cpp-utility.git)
 
 ## Installation
-1) git clone --branch develop https://gitlab.com/FokinDenis88/cpp-utility.git
+1) git clone __branch develop https://gitlab.com/FokinDenis88/cpp-utility.git
 2) (From the working dir = cpp-utility)  cmake -B build/visual-studio
 
 ## Functions of Project

@@ -175,7 +175,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 					std::is_same_v<std::remove_cvref_t<TupleArgsT>, std::remove_cvref_t<TupleArgsNewT> >;
 		}
 
-//-------------------Comparations-------------------------------------------------
+//___________________Comparations_________________________________________________
 		bool operator==(const WeakMethodInvoker& other) const noexcept { // fn calls must be with equal invoker class template args
 			return	mem_fn_ == other.mem_fn_ &&
 					EqualOwner(object_ptr_, other.object_ptr_) &&
@@ -189,7 +189,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		// TODO: it is very difficult to do < with function calls. What's the criteria?
 		// only if mem_fn is equal && object_ptr is equal && all args are < other args.
 
-//----------------------Hashing---------------------------------------------------
+//______________________Hashing___________________________________________________
 
 		/**
 		* Create hash from all components of weak member function call.
@@ -228,8 +228,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			return seed;
 		}
 
-
-//-------------------Setter & Getters---------------------------------------
+//___________________Setter & Getters_______________________________________
 
 		// TODO: Check Data Validity in setter methods
 
@@ -271,7 +270,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			return false;
 		}
 
-//------------Hash-------------------------------------------------------------------------------
+//____________Hash_______________________________________________________________________________
 		// 0x9e3779b9 - magic number for hashing
 
 		/**
@@ -345,7 +344,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		//	}
 		//};
 
-//------------Data-------------------------------------------------------------------------------
+//____________Data_______________________________________________________________________________
 
 		/** Pointer to member function. */
 		MemFnPtrT mem_fn_{};
@@ -445,7 +444,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	public:
 		~WeakMethodAction() override = default;
 
-//----------------------Constructors------------------------------------------------------------
+//______________________Constructors____________________________________________________________
 
 		/**
 		* Save call data in weak member function call object.
@@ -470,7 +469,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			return std::make_unique<WeakMethodInvokerType>(std::move(invoker_));
 		}
 
-//-----------------------------------------------------------------------------------------------------
+//_____________________________________________________________________________________________________
 
 		/**
 		* Save call data in weak member function call object.
@@ -628,7 +627,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		inline std::unique_ptr<IWeakMethodAction> MakeImpl() {
 			return std::make_unique<WeakMethodAction<MemFnPtrT, ObjectT, TupleArgsT>>();
 		}
-//---------------Data-----------------------------------------------------------
+//_______________Data___________________________________________________________
 
 		std::unique_ptr<IWeakMethodAction> impl_{};
 		// TODO: Big problem with call data validity!
