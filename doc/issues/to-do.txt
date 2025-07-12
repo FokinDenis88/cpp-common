@@ -4,7 +4,7 @@ Generic-container: generic work with any container
 
 WeakMethodInvoker: refactor + big attention to Wrappers for storing in container. They need to be refactored.
 
-
+Check lambdas in stadard parallel algorithms for capturing references, cause parallel algorithms mustn't use shared resources.
 
 
 
