@@ -136,23 +136,23 @@ namespace util {
 	 *
 	 * @return		iterator to equal weak_ptr or to end.
 	 */
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
-	inline auto FindEqualOwner(const ContainerT& container,
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
+	inline auto FindEqualOwner(ContainerT&& container,
 								const std::weak_ptr<ValueT> searched_ptr,
 								ExecPolicyT policy = std::execution::seq)
-			-> decltype(container.end())
+			-> decltype(std::forward<ContainerT>(container).end())
 	{
-		using value_type = typename ContainerT::value_type;
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 		static_assert(std::is_same_v<value_type, std::weak_ptr<ValueT>>,
 					"The type mismatch between container elements and weak_ptr");
 
-		auto end{ container.end() };
+		auto end{ std::forward<ContainerT>(container).end() };
 		if (container.empty()) { return end; } // precondition
 
 		auto searched_shared = searched_ptr.lock();
 		if (!searched_shared) { return end; }
 
-		return std::find_if(policy, container.begin(), end,
+		return std::find_if(policy, std::forward<ContainerT>(container).begin(), end,
 			[&searched_shared](const auto& current_ptr) {
 				return EqualOwnerFn(searched_shared, current_ptr);			// O(1)
 			}
@@ -169,13 +169,13 @@ namespace util {
 	 *
 	 * @return		iterator to equal weak_ptr or to end.
 	 */
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
-	inline auto FindEqualOwnerNClean(const ContainerT& container,
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
+	inline auto FindEqualOwnerNClean(ContainerT& container,
 									const std::weak_ptr<ValueT> searched_ptr,
 									ExecPolicyT policy = std::execution::seq)
 			-> decltype(container.end())
 	{
-		using value_type = typename ContainerT::value_type;
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 		static_assert(std::is_same_v<value_type, std::weak_ptr<ValueT>>,
 					"The type mismatch between container elements and weak_ptr");
 
@@ -187,7 +187,7 @@ namespace util {
 
 		auto it_current{ container.begin() };
 		bool found_equal{ false };
-		do { // find expired or equal
+		while (!found_equal && it_current != end) {// find expired or equal
 			it_current = std::find_if(policy, it_current, end,					//O(n)
 				[&searched_shared](const auto& current_weak) { // expired or equal
                     if (current_weak.expired()
@@ -197,26 +197,25 @@ namespace util {
 					return false;
 				}
 			); // lambda
-			if (*it_current.expired()) { // cleanup
+			if (it_current->expired()) { // cleanup
 				it_current = generic::EraseIt(container, it_current);			// O(1)
 			} else {
 				found_equal = true;
 			}
-		} // !do
-		while (!found_equal && it_current != end);
+		} // !while
 
 		return it_current;
 	}
 
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline bool HasValue(const ContainerT& container,
 						const std::weak_ptr<ValueT> searched_ptr,
 						ExecPolicyT policy = std::execution::seq) {
 		return FindEqualOwner(container, searched_ptr, policy) != container.end();
 	}
 
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
-	inline bool HasValueNClean(const ContainerT& container,
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
+	inline bool HasValueNClean(ContainerT& container,
 								const std::weak_ptr<ValueT> searched_ptr,
 								ExecPolicyT policy = std::execution::seq) {
 		return FindEqualOwnerNClean(container, searched_ptr, policy) != container.end();
@@ -235,13 +234,13 @@ namespace util {
 	 * @param policy
 	 * @return				count of expired weak_ptr
 	 */
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline auto EraseEqualOwner(ContainerT& container,
 								const std::weak_ptr<ValueT> searched_ptr,
 								ExecPolicyT policy = std::execution::seq)
 			-> decltype(container.end())
 	{
-		auto it_equal = FindEqualOwner(container, searched_ptr, policy);	// O(n)
+		decltype(container.end()) it_equal = FindEqualOwner(container, searched_ptr, policy);	// O(n)
 		return generic::EraseIt(container, it_equal);						// O(1)
 	}
 
@@ -256,7 +255,7 @@ namespace util {
 	 * @param searched_ptr
 	 * @param policy
 	 */
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline auto EraseEqualOwnerNClean(ContainerT& container,
 										const std::weak_ptr<ValueT> searched_ptr,
 										ExecPolicyT policy = std::execution::seq)
@@ -273,7 +272,7 @@ namespace util {
 	 * Complexity: O(n)
 	 * Mutex: write
 	 */
-	template<typename ContainerT, typename ExecPolicyT>
+	template<typename ContainerT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline void EraseAllExpired(ContainerT& container, ExecPolicyT policy = std::execution::seq) {
 		// Generic Function. Maybe used not only in observer. So no mutex lock inside.
 		if (container.empty()) { return; }
@@ -288,7 +287,7 @@ namespace util {
 	 * Complexity: O(n)
 	 * Mutex: write
 	 */
-	template<typename ContainerT, typename ExecPolicyT>
+	template<typename ContainerT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline void EraseNExpired(ContainerT& container,
 								const size_t expired_count,
 								ExecPolicyT policy = std::execution::seq) {
@@ -327,7 +326,7 @@ namespace deprecated {
 	 * @param policy
 	 * @return	count of expired weak_ptr
 	 */
-	template<typename ContainerT, typename ValueT, typename ExecPolicyT>
+	template<typename ContainerT, typename ValueT, typename ExecPolicyT = std::execution::sequenced_policy>
 	[[deprecated]]
 	inline size_t EraseEqualWeakPtr_Old(ContainerT& container,
 										const std::weak_ptr<ValueT> searched_ptr,

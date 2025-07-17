@@ -240,7 +240,7 @@ namespace util {
 				std::tuple<bool, typename MemFnPtrTrait<MemFnPtrT>::ReturnT>,
 				std::tuple<bool> >
 	{
-		using Indices = std::make_index_sequence<std::tuple_size_v<ArgsTupleT>>;
+		using Indices = std::make_index_sequence< std::tuple_size_v< std::remove_cvref_t<ArgsTupleT> > >;
 		return ApplyMethodImpl(mem_fn, std::forward<ObjectT>(object),
 								std::forward<ArgsTupleT>(args), Indices{});
 	}

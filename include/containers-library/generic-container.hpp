@@ -9,20 +9,163 @@
 
 // Container Types
 #include <forward_list>
+#include <list>
 
 #include <set>				// Find
 #include <unordered_set>	// Find
 #include <map>				// Find
 #include <unordered_map>	// Find
 
+
 // TODO: Too many container types. Too complex
 
-// TODO: add specific functions for that containers, for which solution is not optimal.
-// F.e. std::find is not optimal for std::unordered_set. Use specific container functions.
+
+namespace util {
+
+	/**
+	* - Sequence containers
+	* array
+	* vector
+	* inplace_vector
+	* hive
+	* deque
+	* forward_list
+	* list
+	*/
+	template<typename ContainerT>
+	struct IsSequence : public std::false_type {};
+	/*template<typename ValueT, size_t kSize>
+	struct IsSequence<std::array<ValueT, kSize>> : public std::true_type {};*/
+	/*template<typename ValueT>
+	struct IsSequence<std::vector<ValueT>> : public std::true_type {};*/
+	/*template<typename ValueT>
+	struct IsSequence<std::inplace_vector<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsSequence<std::hive<ValueT>> : public std::true_type {};*/
+	/*template<typename ValueT>
+	struct IsSequence<std::deque<ValueT>> : public std::true_type {};*/
+	template<typename ValueT>
+	struct IsSequence<std::forward_list<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsSequence<std::list<ValueT>> : public std::true_type {};
+	template<typename ContainerT>
+	inline constexpr bool IsSequence_v{ IsSequence<ContainerT>::value };
+
+
+	/**
+	* - Associative containers
+	* set
+	* map
+	* multiset
+	* multimap
+	*/
+	template<typename ContainerT>
+	struct IsOrderedAssociative : public std::false_type {};
+	template<typename KeyT>
+	struct IsOrderedAssociative<std::set<KeyT>> : public std::true_type {};
+	template<typename KeyT, typename T>
+	struct IsOrderedAssociative<std::map<KeyT, T>> : public std::true_type {};
+	/*template<typename ValueT>
+	struct IsOrderedAssociative<std::multiset<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsOrderedAssociative<std::multimap<ValueT>> : public std::true_type {};*/
+	template<typename ContainerT>
+	inline constexpr bool IsOrderedAssociative_v{ IsOrderedAssociative<ContainerT>::value };
+
+
+	/**
+	* - Unordered associative
+	* unordered_set
+	* unordered_map
+	* unordered_multiset
+	* unordered_multimap
+	*/
+	template<typename ContainerT>
+	struct IsUnorderedAssociative : public std::false_type {};
+	template<typename KeyT>
+	struct IsUnorderedAssociative<std::unordered_set<KeyT>> : public std::true_type {};
+	template<typename KeyT, typename T>
+	struct IsUnorderedAssociative<std::unordered_map<KeyT, T>> : public std::true_type {};
+	/*template<typename ValueT>
+	struct IsUnorderedAssociative<std::unordered_multiset<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsUnorderedAssociative<std::unordered_multimap<ValueT>> : public std::true_type {};*/
+	template<typename ContainerT>
+	inline constexpr bool IsUnorderedAssociative_v{ IsUnorderedAssociative<ContainerT>::value };
+
+
+	/** Ordered and unordered associative containers. */
+	template<typename ContainerT>
+	struct IsAssociative {
+        static constexpr bool value{ IsOrderedAssociative_v<ContainerT> || IsUnorderedAssociative_v<ContainerT> };
+	};
+	template<typename ContainerT>
+	inline constexpr bool IsAssociative_v{ IsAssociative<ContainerT>::value };
+
+
+	/**
+	* - Container adaptors
+	* stack
+	* queue
+	* priority_queue
+	* flat_set
+	* flat_map
+	* flat_multiset
+	* flat_multimap
+	*/
+	template<typename ContainerT>
+	struct IsContainerAdaptor : public std::false_type {};
+	/*template<typename ValueT>
+	struct IsContainerAdaptor<std::stack<ValueT>> : public std::true_type {};*/
+	/*template<typename ValueT>
+	struct IsContainerAdaptor<std::queue<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsContainerAdaptor<std::priority_queue<ValueT>> : public std::true_type {};*/
+	/*template<typename ValueT>
+	struct IsContainerAdaptor<std::flat_set<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsContainerAdaptor<std::flat_map<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsContainerAdaptor<std::flat_multiset<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsContainerAdaptor<std::flat_multimap<ValueT>> : public std::true_type {};*/
+	template<typename ContainerT>
+	inline constexpr bool IsContainerAdaptor_v{ IsContainerAdaptor<ContainerT>::value };
+
+
+	/**
+	* - Views(since C++20)
+	* span
+	* mdspan
+	*/
+	template<typename ContainerT>
+	struct IsView : public std::false_type {};
+	/*template<typename ValueT>
+	struct IsView<std::span<ValueT>> : public std::true_type {};
+	template<typename ValueT>
+	struct IsView<std::mdspan<ValueT>> : public std::true_type {};*/
+	template<typename ContainerT>
+	inline constexpr bool IsView_v{ IsView<ContainerT>::value };
+
+
+	/** Is container a forward list? */
+	template<typename ContainerT>
+	struct IsForwardList : public std::false_type {};
+	template<typename ValueT>
+	struct IsForwardList<std::forward_list<ValueT>> : public std::true_type {};
+	template<typename ContainerT>
+	inline constexpr bool IsForwardList_v{ IsForwardList<ContainerT>::value };
+
+} // !namespace util
+
+
+//================================================================================================================================
 
 
 /** Generic container processing. One function for all container types. */
 namespace generic { // Generic Container Element Modification
+	// TODO: add specific functions for that containers, for which solution is not optimal.
+	// F.e. std::find is not optimal for std::unordered_set. Use specific container functions.
 
 	/**
 	* Add (emplace, push or insert) element from any type of container.
@@ -33,23 +176,15 @@ namespace generic { // Generic Container Element Modification
 	*
 	* Mutex: read
 	*/
-	template<typename ContainerT, typename ExecPolicyT>
+	template<typename ContainerT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline decltype(auto) Find(const ContainerT& container,
 								const typename ContainerT::value_type& value,
 								ExecPolicyT policy = std::execution::seq) {
-		using value_type = typename ContainerT::value_type;
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 
-		if constexpr (
-				std::is_same_v<std::remove_cvref_t<ContainerT>, std::unordered_set<value_type>>
-				|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::set<value_type>>
-				|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::unordered_map<value_type>>
-				|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::map<value_type>>
-				//|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::multiset<value_type>>
-				//|| std::is_same_v<std::remove_cvref_t<ContainerT>, std::multimap<value_type>>
-			)
-		{ // associative containers have special find() method
-			return container.find(value);
-														//unordered_set, unordered_map			O(1)
+		if constexpr (util::IsAssociative_v<ContainerT>) {
+			// associative containers have special find() method
+			return container.find(value);				//unordered_set, unordered_map			O(1)
 														// set, map								O(log n)
 		}
 		//else if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>, std::vector<bool>>) {
@@ -68,23 +203,67 @@ namespace generic { // Generic Container Element Modification
 
 
 	/**
-	* Add (emplace, push or insert) element from any type of container.
+	* Emplace element for any type of container.
+	*
+	* Associative containers need only value.
+	* Sequence containers need value and position.
 	*
 	* Complexity: O(1)
 	* Mutex: write
 	*/
-	template<typename ContainerT>
-	inline void AddElement(ContainerT& container, typename ContainerT::value_type&& value) {
-		using value_type = typename ContainerT::value_type;
+	template<typename ContainerT, typename... ArgsT>
+	inline void Emplace(ContainerT& container, ArgsT&&... args) {
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 
-		if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>,
-						std::forward_list<value_type>>) { // forward_list
-			container.emplace_front(std::forward<value_type>(value));			// O(1)
-		} else { // All other types of containers, except forward_list
-			container.emplace(std::forward<value_type>(value));					// O(1)
+		if constexpr (util::IsForwardList_v<ContainerT>) {
+			container.emplace_front(std::forward<ArgsT>(args)...);						// O(1)
+		}
+		else if constexpr (util::IsSequence_v<ContainerT>) { // all sequence containers, except forward_list
 			// emplace_back is better for  vector, deque and list
+			container.emplace_back(std::forward<ArgsT>(args)...);			// O(1)
+		}
+		else if constexpr (util::IsAssociative_v<ContainerT>) {
+            container.emplace(std::forward<ArgsT>(args)...);							// O(1)
+		}
+		else { // Default branch
+			container.emplace(container.end(), std::forward<ArgsT>(args)...);			// O(1)
 		}
 	}
+	// TODO: return pair<iterator, bool> bool - success flag
+
+	/**
+	* Emplace element for any type of container.
+	* For forward_list is used emplace_after.
+	*
+	* Associative containers need only value.
+	* Sequence containers need value and position.
+	*
+	* Complexity: O(1)
+	* Mutex: write
+	*/
+	template<typename ContainerT, typename... ArgsT>
+	inline void Emplace(ContainerT& container, typename ContainerT::const_iterator pos,
+						ArgsT&&... args) {
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
+
+		if constexpr (util::IsForwardList_v<ContainerT>) {
+			container.emplace_after(pos, std::forward<ArgsT>(args)...);					// O(1)
+		}
+		else if constexpr (util::IsSequence_v<ContainerT>) { // all sequence containers, except forward_list
+			// emplace_back is better for  vector, deque and list
+			container.emplace(pos, std::forward<ArgsT>(args)...);						// O(1)
+		}
+		else if constexpr (util::IsAssociative_v<ContainerT>) {
+			container.emplace(std::forward<ArgsT>(args)...);							// O(1)
+		}
+		else { // Default branch
+			container.emplace(pos, std::forward<ArgsT>(args)...);						// O(1)
+		}
+	}
+	// TODO: return pair<iterator, bool> bool - success flag
+
+
+//=================================================================================================================================
 
 	/**
 	* Remove element from the whole container of any type.
@@ -94,17 +273,28 @@ namespace generic { // Generic Container Element Modification
 	*
 	* @param predicate		for remove_if operation
 	*/
-	template<typename ContainerT, typename ExecPolicyT>
+	template<typename ContainerT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline void RemoveIf(ContainerT& container,
 						auto predicate,
 						ExecPolicyT policy = std::execution::seq) {
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 		if (container.empty()) { return; } // Precondition
 
-		if constexpr (std::is_same_v<std:: remove_cvref_t<ContainerT>,
-						std::forward_list<typename ContainerT::value_type>>) { // for Forward_list
+		if constexpr (util::IsForwardList_v<ContainerT>) { // std::remove_if is not working with forward_list
 			container.remove_if(predicate); // erase-remove idiom is not for forward_list		// O(n)
-			// std::remove_if is not working with forward_list
-		} else { // All other containers
+		} else if constexpr (std::is_same_v< std::remove_cvref_t<ContainerT>, std::set<value_type> >
+						|| std::is_same_v< std::remove_cvref_t<ContainerT>, std::unordered_set<value_type> >) {
+			// Both return from container.begin() - iterator and const_iterator are constant iterators,
+			// it is not possible to mutate the elements of the container through an iterator,
+			// so remove_if is not working with set, unordered_set, cause needs to mutate the elements.
+			auto it_current{ container.cbegin() };
+			auto cend{ container.cend() };
+			while (it_current != cend) {
+				it_current = std::find_if(policy, it_current, cend, predicate);					//O(n)
+				if (it_current != cend) { it_current = container.erase(it_current); }			//O(1)
+			}
+		}
+		else { // All other containers
 			container.erase(std::remove_if(policy, container.begin(),
 											container.end(), predicate), container.end());		// O(n)
 		}
@@ -124,15 +314,14 @@ namespace generic { // Generic Container Element Modification
 	*
 	* @param predicate for remove_if operation
 	*/
-	template<typename ContainerT, typename ExecPolicyT>
+	template<typename ContainerT, typename ExecPolicyT = std::execution::sequenced_policy>
 	inline void EraseFirst(ContainerT& container,
 								const typename ContainerT::value_type& value,
 								ExecPolicyT policy = std::execution::seq) {
-		using value_type = typename ContainerT::value_type;
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 		if (container.empty()) { return; } // Precondition
 
-		if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>,
-									std::forward_list<value_type>>) { // for Forward_list
+		if constexpr (util::IsForwardList_v<ContainerT>) { // for Forward_list
 			container.remove(value);																	// O(n)
 		} else { // All other containers
 			container.erase(Find(container, value, policy));										// O(n)
@@ -155,10 +344,9 @@ namespace generic { // Generic Container Element Modification
 						typename ContainerT::iterator it)
 			-> decltype(container.end())
 	{
-		using value_type = typename ContainerT::value_type;
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 
-		if constexpr (!std::is_same_v<std::remove_cvref_t<ContainerT>,
-									std::forward_list<value_type>>) { // all except forward_list
+		if constexpr (!util::IsForwardList_v<ContainerT>) { // all except forward_list
 			if (it != container.end()) {
 				return container.erase(it);
 			}
@@ -190,14 +378,15 @@ namespace generic { // Generic Container Element Modification
 
 #endif // !GENERIC_CONTAINER_HPP
 
+
 /*
 	1. Добавление элемента
 
 		Ты уже реализовал этот метод, но для полноты картины можно добавить ещё пару нюансов, например, использование emplace_back() для контейнеров, поддерживающих вставку в конец(таких как vector, deque, list).
 
 		template<typename ContainerT>
-	inline void AddElement(ContainerT& container, typename ContainerT::value_type&& value) {
-		using value_type = typename ContainerT::value_type;
+	inline void Emplace(ContainerT& container, typename ContainerT::value_type&& value) {
+		using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 
 		if constexpr (std::is_same_v<std::remove_cvref_t<ContainerT>, std::forward_list<value_type>>) {
 			container.emplace_front(std::forward<value_type>(value)); // O(1)
@@ -364,12 +553,12 @@ namespace generic { // Generic Container Element Modification
 			template<typename ContainerT>
 			class GenericContainerProcessor {
 			public:
-				using value_type = typename ContainerT::value_type;
+				using value_type = typename std::remove_cvref_t<ContainerT>::value_type;
 
 				explicit GenericContainerProcessor(ContainerT& cont) : m_container(cont) {}
 
 				void addElement(value_type&& val) {
-					AddElement(m_container, std::forward<value_type>(val));
+					Emplace(m_container, std::forward<value_type>(val));
 				}
 
 				void removeElement(const value_type& val) {

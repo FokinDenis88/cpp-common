@@ -149,7 +149,7 @@ namespace util {
 	};
 
 	template<typename FnPtr>
-	inline bool constexpr HasMemberFn_v = HasMemberFn<FnPtr>::value;
+	inline constexpr bool HasMemberFn_v = HasMemberFn<FnPtr>::value;
 
 
 } // !namespace util

@@ -6,7 +6,7 @@
 #include <tuple>
 #include <utility> // pair, forward
 
-//#include "memory-management-library/weak-ptr/weak-ptr.hpp"
+#include "memory-management-library/weak-ptr/weak-ptr.hpp"
 #include "general-utilities-library/functional/functional.hpp"
 
 
@@ -20,7 +20,7 @@ This code provides flexible utilities to invoke member functions via pointers or
 
     Member functions returning void or non-void types.
     Null or expired pointers.
-    Type safety through static assertions.
+    T safety through static assertions.
     Efficient argument unpacking via index sequences.
 
 This pattern is useful in callback systems, reflection-like mechanisms, or generic frameworks where functions are invoked dynamically with parameters stored in tuples.
@@ -76,7 +76,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	*					mem_fn != nullptr && !object.expired().
 	*
 	* @tparam ReturnT		The return type of member function.
-	* @tparam ObjectT		Type of object, for which member function will be called.
+	* @tparam ObjectT		T of object, for which member function will be called.
 	* @tparam TupleArgsT	Tuple of Arguments for member function call, all except this pointer.
 	*/
 	template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
@@ -107,8 +107,8 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 						"mem_fn: Expected member function pointer.");
 		static_assert(HasMemberFn_v<MemFnPtrT>,
 						"The specified method does not exist in the given class.");
-		static_assert(std::is_same_v< std::remove_cvref_t<ArgsT>, std::remove_cvref_t<TupleArgsT> >,
-						"Types of arguments in member function pointer and in tuple of arguments must be equal.");
+		static_assert(std::is_convertible_v< std::remove_cvref_t<TupleArgsT>, std::remove_cvref_t<ArgsT> >,
+						"Ts of arguments in member function pointer and in tuple of arguments must be equal.");
 		// TODO: maybe make checks not static_assert? Maybe make them dynamic condition in function? Maybe make this in MethodAction
 
 		WeakMethodInvoker() = default;
@@ -124,6 +124,19 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 							std::weak_ptr<ObjectT>		object_ptr,
 							TupleArgsT&&				args) {
 			SetInvokeData(mem_fn, object_ptr, std::forward<TupleArgsT>(args));
+		}
+
+		/**
+		* Save call data in weak member function call object.
+		*
+		* @param mem_fn			pointer to member function
+		* @param object_ptr		pointer to object, on which member function will be called
+		* @param args			arguments for member function call
+		*/
+		WeakMethodInvoker(MemFnPtrT					mem_fn,
+						std::shared_ptr<ObjectT>	object_ptr,
+						TupleArgsT&&				args)
+				: WeakMethodInvoker{ mem_fn, std::weak_ptr<ObjectT>{object_ptr}, std::forward<TupleArgsT>(args) } {
 		}
 
 
@@ -155,7 +168,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		* @return		tuple(success flag, return value of member function call. Or Nothing = void return )
 		*/
 		inline WeakMemFnReturnT operator()() const { // object_ptr will be locked inside ApplyMethodByPtr
-			return ApplyMethodByPtr(mem_fn, object_ptr, std::forward<TupleArgsT>(args));
+			return ApplyMethodByPtr(mem_fn_, object_ptr_, args_);
 		}
 
 		bool expired() const noexcept {
@@ -178,13 +191,14 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 //___________________Comparations_________________________________________________
 		bool operator==(const WeakMethodInvoker& other) const noexcept { // fn calls must be with equal invoker class template args
 			return	mem_fn_ == other.mem_fn_ &&
-					EqualOwner(object_ptr_, other.object_ptr_) &&
+					util::EqualOwnerFn(object_ptr_, other.object_ptr_) &&
 					args_ == other.args_;
 		}
 
 		/** It is very difficult to compare two member function call. Unavailable task. So there is stub here. */
 		bool operator<(const WeakMethodInvoker& other) const noexcept { // stub
 			//return std::tie(mem_fn_, object_ptr_, args_) < std::tie(other.mem_fn_, other.object_ptr_, other.args_);
+			return false;
 		}
 		// TODO: it is very difficult to do < with function calls. What's the criteria?
 		// only if mem_fn is equal && object_ptr is equal && all args are < other args.
@@ -279,9 +293,30 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		* @return	mixed new seed value.
 		*/
 		inline size_t MixHashMemFn(size_t seed) const noexcept {
-			std::hash<void*> hasher_func;
+			/*std::hash<const void*> hasher_func;
 			seed ^= hasher_func(reinterpret_cast<const void*>(mem_fn_)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			return seed;*/
+
+			/*std::hash<const std::intptr_t> hasher_func;
+			const std::intptr_t fn_ptr_as_int = reinterpret_cast<const std::intptr_t>(mem_fn_);
+			seed ^= hasher_func(fn_ptr_as_int) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			return seed;*/
+
+			/*std::hash<std::intptr_t> hasher_func;
+			std::intptr_t fn_ptr_as_int = reinterpret_cast<std::intptr_t>(mem_fn_);
+			seed ^= hasher_func(fn_ptr_as_int) + 0x9e3779b9 + (seed << 6) + (seed >> 2);*/
+
+			//std::hash<MemberFuncPtr>{}(ptr);
+			//std::hash<decltype(mem_fn_)> hasher_func{};
+
+			//std::hash<std::uintptr_t>{}(reinterpret_cast<std::uintptr_t>(ptr));
+			//seed ^= std::hash<decltype(mem_fn_)>{}(mem_fn_)+ 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+
+			//void* ptr = reinterpret_cast<void*>(&WeakMethodInvoker<MemFnPtrT, ObjectT, TupleArgsT>::IsInvokeDataValid);
+			//seed ^= std::hash<std::uintptr_t>{}(reinterpret_cast<std::uintptr_t>(mem_fn_)) +0x9e3779b9 + (seed << 6) + (seed >> 2);
 			return seed;
+			// TODO: get hash of member function
 		}
 
 		/**
@@ -292,7 +327,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		inline size_t MixHashObjectPtrStable(size_t seed) const noexcept {
 			if (auto shared_locked = object_ptr_.lock()) {
 				std::hash<void*> hasher_obj;
-				seed ^= hasher_obj(reinterpret_cast<const void*>(shared_locked.get())) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+				seed ^= hasher_obj(reinterpret_cast<void*>(shared_locked.get())) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 			}
 			return seed;
 		}
@@ -315,14 +350,25 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		* @return	mixed new seed value.
 		*/
 		inline size_t MixHashArgs(size_t seed) const noexcept {
-			seed = ApplyMethodPart(&WeakMethodInvoker<MemFnPtrT, ObjectT,TupleArgsT>::MixHashArgsImpl,
-									*this, seed, std::forward<TupleArgsT>(args_));
-			return seed;
+			//seed = std::get<1>(ApplyMethodPart(&WeakMethodInvoker<MemFnPtrT, ObjectT,TupleArgsT>::MixHashArgsImpl<TupleArgsT>,
+									//*this, seed, static_cast<std::tuple<const std::string&>>(args_));
+									//*this, seed, args_));
+			using Indices = std::make_index_sequence<std::tuple_size_v<TupleArgsT>>;
+			return MixHashArgsImpl(seed, Indices{});
 		}
 
-		template<typename... ArgsT>
-		inline size_t MixHashArgsImpl(size_t seed, ArgsT&&... args) const noexcept {
-			((seed ^= std::hash<decltype(args)>{}(args)+0x9e3779b9 + (seed << 6) + (seed >> 2)) , ...); // fold expression
+		template<typename ArgT>
+		inline void MixHashArgsImplArg(size_t& seed, const ArgT& arg) const noexcept {
+			seed ^= std::hash< std::remove_cvref_t<decltype(arg)> >{}(arg)+0x9e3779b9 + (seed << 6) + (seed >> 2);
+			// TODO: what if arg has no standard hash ?
+		}
+
+		//template<typename... ArgsT>
+		//inline size_t MixHashArgsImpl(size_t seed, ArgsT&&... args) const noexcept {
+		template<size_t... I>
+		inline size_t MixHashArgsImpl(size_t seed, std::index_sequence<I...>) const noexcept {
+			//((seed ^= std::hash<decltype(args)>{}(args)+0x9e3779b9 + (seed << 6) + (seed >> 2)) , ...); // fold expression
+			((MixHashArgsImplArg(seed, std::get<I>(args_))), ...);
 			return seed;
 		}
 
@@ -429,11 +475,11 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 	template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
 	class WeakMethodAction : public IWeakMethodAction {
 	public:
-		using WeakMethodInvokerType = WeakMethodInvoker<MemFnPtrT, ObjectT, TupleArgsT>;
+		using WeakMethodInvokerT = WeakMethodInvoker<MemFnPtrT, ObjectT, TupleArgsT>;
 
-		using Traits = WeakMethodInvokerType::Traits;
-		using ReturnT = WeakMethodInvokerType::ReturnT;
-		using ArgsT = WeakMethodInvokerType::ArgsT;
+		using Traits = WeakMethodInvokerT::Traits;
+		using ReturnT = WeakMethodInvokerT::ReturnT;
+		using ArgsT = WeakMethodInvokerT::ArgsT;
 
 		WeakMethodAction() = default;
 	protected:
@@ -459,14 +505,25 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			invoker_.SetInvokeData(mem_fn, object_ptr, std::forward<TupleArgsT>(args));
 		}
 
+		/**
+		* Save call data in weak member function call object.
+		*
+		* @param mem_fn			pointer to member function
+		* @param object_ptr		pointer to object, on which member function will be called
+		* @param args			arguments for member function call
+		*/
+		template<typename InvokerT>
+		explicit WeakMethodAction(InvokerT&& invoker) noexcept : invoker_{ std::forward<InvokerT>(invoker) } {
+		}
+
 		/** Copy this object and return new copy. */
 		std::unique_ptr<IWeakMethodAction> Clone() const noexcept override {
-			return std::make_unique<WeakMethodInvokerType>(invoker_);
+			return std::make_unique<WeakMethodAction<MemFnPtrT, ObjectT, TupleArgsT>>(invoker_);
 		}
 
 		/** Move this object to new unique_ptr. */
 		std::unique_ptr<IWeakMethodAction> TransferOwnership() noexcept override {
-			return std::make_unique<WeakMethodInvokerType>(std::move(invoker_));
+			return std::make_unique<WeakMethodAction<MemFnPtrT, ObjectT, TupleArgsT>>(std::move(invoker_));
 		}
 
 //_____________________________________________________________________________________________________
@@ -520,7 +577,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		}
 
 	private:
-		WeakMethodInvokerType invoker_{};
+		WeakMethodInvokerT invoker_{};
 	}; // !class WeakMethodAction
 
 
@@ -542,8 +599,16 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 			}
             return *this;
 		}
-		MethodActionWrap(MethodActionWrap&&) noexcept = default;
-		MethodActionWrap& operator=(MethodActionWrap&&) noexcept = default;
+		MethodActionWrap(MethodActionWrap&& other) noexcept
+			: impl_{ other.impl_ ? other.impl_->TransferOwnership() : nullptr } {
+		}
+		MethodActionWrap& operator=(MethodActionWrap&& other) noexcept {
+			if (this != &other) {
+				if (other.impl_) { impl_ = other.impl_->TransferOwnership(); }
+				else { impl_.reset(); }
+			}
+			return *this;
+		}
 		~MethodActionWrap() = default;
 
 		/**
@@ -557,8 +622,22 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		MethodActionWrap(MemFnPtrT					mem_fn,
 						std::weak_ptr<ObjectT>		object_ptr,
 						TupleArgsT&&				args)
-			: impl_{ MakeImpl(mem_fn, object_ptr, std::forward<TupleArgsT>(args)) }
+				: impl_{ MakeImpl(mem_fn, object_ptr, std::forward<TupleArgsT>(args)) }
 		{
+		}
+
+		/**
+		* Save call data in weak member function call object.
+		*
+		* @param mem_fn			pointer to member function
+		* @param object_ptr		pointer to object, on which member function will be called
+		* @param args			arguments for member function call
+		*/
+		template<typename MemFnPtrT, typename ObjectT, typename TupleArgsT>
+		MethodActionWrap(MemFnPtrT					mem_fn,
+						std::shared_ptr<ObjectT>	object_ptr,
+						TupleArgsT&&				args)
+			: MethodActionWrap{ mem_fn, std::weak_ptr<ObjectT>{object_ptr}, std::forward<TupleArgsT>(args) } {
 		}
 
 
