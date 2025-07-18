@@ -554,7 +554,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		}
 
 		bool operator==(const IWeakMethodAction& other) const noexcept override {// it is not safe, if there is more inhereted classes
-			if ( auto other_ptr = dynamic_cast<const WeakMethodAction<MemFnPtrT,ObjectT, TupleArgsT>*>(&other) ) {
+			if ( const auto other_ptr = dynamic_cast<const WeakMethodAction<MemFnPtrT,ObjectT, TupleArgsT>*>(&other) ) {
 				return invoker_ == other_ptr->invoker_;
 			}
 			return false;
@@ -671,12 +671,12 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 
 		bool operator==(const MethodActionWrap& other) const noexcept {
 			if (!impl_) { return false; }
-			return impl_->operator==(*other.impl_);
+			return impl_->operator==(*(other.impl_));
 		}
 
 		bool operator<(const MethodActionWrap& other) const noexcept {
 			if (!impl_) { return false; }
-			return impl_->operator<(*other.impl_);
+			return impl_->operator<(*(other.impl_));
 		}
 
 		/** Return hash value for this object. */

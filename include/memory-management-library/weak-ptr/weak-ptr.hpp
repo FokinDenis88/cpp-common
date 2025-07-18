@@ -197,10 +197,12 @@ namespace util {
 					return false;
 				}
 			); // lambda
-			if (it_current->expired()) { // cleanup
-				it_current = generic::EraseIt(container, it_current);			// O(1)
-			} else {
-				found_equal = true;
+			if (it_current != end) {
+				if (it_current->expired()) { // cleanup
+					it_current = generic::EraseIt(container, it_current);			// O(1)
+				} else {
+					found_equal = true;
+				}
 			}
 		} // !while
 
