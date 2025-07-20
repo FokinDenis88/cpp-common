@@ -287,11 +287,11 @@ namespace generic { // Generic Container Element Modification
 			// Both return from container.begin() - iterator and const_iterator are constant iterators,
 			// it is not possible to mutate the elements of the container through an iterator,
 			// so remove_if is not working with set, unordered_set, cause needs to mutate the elements.
-			auto it_current{ container.cbegin() };
-			auto cend{ container.cend() };
-			while (it_current != cend) {
-				it_current = std::find_if(policy, it_current, cend, predicate);					//O(n)
-				if (it_current != cend) { it_current = container.erase(it_current); }			//O(1)
+			auto it_current{ container.begin() };
+			auto end{ container.end() };
+			while (it_current != end) {
+				it_current = std::find_if(policy, it_current, end, predicate);					//O(n)
+				if (it_current != end) { it_current = container.erase(it_current); }			//O(1)
 			}
 		}
 		else { // All other containers

@@ -223,7 +223,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		inline size_t HashStable() const noexcept {
 			size_t seed{ 0 };
 			seed = MixHashMemFn(seed);
-			seed = MixHashObjectPtrStable(seed);
+			//seed = MixHashObjectPtrStable(seed); // TODO: unstable hash, cause of expired ptr
 			seed = MixHashArgs(seed);
 			return seed;
 		}
@@ -237,7 +237,7 @@ This pattern is useful in callback systems, reflection-like mechanisms, or gener
 		inline size_t HashQuick() const noexcept {
 			size_t seed{ 0 };
 			seed = MixHashMemFn(seed);
-			seed = MixHashObjectPtrQuick(seed);
+			//seed = MixHashObjectPtrQuick(seed); // TODO: unstable hash, cause of expired ptr
 			seed = MixHashArgs(seed);
 			return seed;
 		}
