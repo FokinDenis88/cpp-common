@@ -128,28 +128,92 @@ namespace util {
 	};
 
 
+	///** Base template, set value = false */
+	//template<typename FnPtr>
+	//struct HasMemberFn : public std::false_type {};
+
+	///** Specialization of non const member function */
+	//template<typename Ret, typename Class, typename... Args>
+	//struct HasMemberFn<Ret(Class::*)(Args...)> : std::integral_constant<bool,
+	//	std::is_same_v<Ret, decltype((((Class*) nullptr)->*(static_cast<Ret(Class::*)(Args...)>(nullptr)))(
+	//		std::declval<Args>()...))
+	//	>> {
+	//};
+
+	///** Specialization of const member function */
+	//template<typename Ret, typename Class, typename... Args>
+	//struct HasMemberFn<Ret(Class::*)(Args...) const> : std::integral_constant<bool,
+	//	std::is_same_v<Ret, decltype((((const Class*) nullptr)->*(static_cast<Ret(Class::*)(Args...) const>(nullptr)))(
+	//		std::declval<Args>()...))
+	//	>> {
+	//};
+
+	//template<typename FnPtr>
+	//inline constexpr bool HasMemberFn_v = HasMemberFn<FnPtr>::value;
+
+
 	/** Base template, set value = false */
 	template<typename FnPtr>
 	struct HasMemberFn : public std::false_type {};
 
 	/** Specialization of non const member function */
 	template<typename Ret, typename Class, typename... Args>
-	struct HasMemberFn<Ret(Class::*)(Args...)> : std::integral_constant<bool,
-		std::is_same_v<Ret, decltype((((Class*) nullptr)->*(static_cast<Ret(Class::*)(Args...)>(nullptr)))(
-			std::declval<Args>()...))
+	struct HasMemberFn<Ret(Class::*)(Args...)> : public std::integral_constant<bool,
+		std::is_same_v<Ret, decltype(((std::declval<Class&>().*static_cast<Ret(Class::*)(Args...)>(nullptr))(std::declval<Args>()...)))
 		>> {
 	};
 
 	/** Specialization of const member function */
 	template<typename Ret, typename Class, typename... Args>
-	struct HasMemberFn<Ret(Class::*)(Args...) const> : std::integral_constant<bool,
-		std::is_same_v<Ret, decltype((((const Class*) nullptr)->*(static_cast<Ret(Class::*)(Args...) const>(nullptr)))(
-			std::declval<Args>()...))
+	struct HasMemberFn<Ret(Class::*)(Args...) const> : public std::integral_constant<bool,
+		std::is_same_v<Ret, decltype(((std::declval<const Class&>().*static_cast<Ret(Class::*)(Args...) const>(nullptr))(std::declval<Args>()...)))
 		>> {
 	};
 
+	// Useful alias for convenience
 	template<typename FnPtr>
 	inline constexpr bool HasMemberFn_v = HasMemberFn<FnPtr>::value;
+
+
+//===========================================================================================================================
+
+	template<typename Lambda>
+	struct is_valid_helper {
+		template<typename... LambdaArgs>
+		constexpr auto test(int)
+			-> decltype(std::declval<Lambda>()(std::declval<LambdaArgs>()...), std::true_type()) {
+			return std::true_type();
+		}
+
+		template<typename... LambdaArgs>
+		constexpr std::false_type test(...) {
+			return std::false_type();
+		}
+
+		template<typename... LambdaArgs>
+		constexpr auto operator()(const LambdaArgs&...) {
+			return this->test<LambdaArgs...>(0);
+		}
+	};
+
+	template<typename Lambda>
+	constexpr auto is_valid(const Lambda&) {
+		return is_valid_helper<Lambda>{};
+	}
+
+
+	struct A {
+		int a{};
+	};
+
+	auto is_assignable = is_valid([](auto&& x) -> decltype(x = x) {});
+	void my_function(const A& a) {
+		static_assert(decltype(is_assignable(a))::value, "A is not assignable");
+	}
+
+	auto is_default_constructible = is_valid([](auto&& x) -> decltype(new typename std::remove_reference_t<decltype(x)>) {});
+
+	auto is_destructible = is_valid([](auto&& x) -> decltype(delete x) {});
 
 
 } // !namespace util
